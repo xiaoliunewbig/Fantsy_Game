@@ -1,186 +1,205 @@
-#include "Logger.h"
-#include <QDebug>
-#include <QDir>
-#include <QStandardPaths>
-#include <iostream>
+/**
+ * @file Logger.cpp
+ * @brief 日志记录器实现
+ * @details 实现日志记录器的核心功能，包括单例模式、日志记录、格式化等
+ * @author [pengchengkang] 
+ * @date 2025.06.16
+ */
 
-Logger* Logger::s_instance = nullptr;
-QMutex Logger::s_mutex;
+#include "utils/Logger.h"
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <filesystem>
 
-Logger* Logger::instance() {
-    if (!s_instance) {
-        QMutexLocker locker(&s_mutex);
-        if (!s_instance) {
-            s_instance = new Logger();
-        }
-    }
-    return s_instance;
+namespace Fantasy {
+
+Logger& Logger::getInstance() {
+    static Logger instance;
+    return instance;
 }
 
-Logger::Logger()
-    : m_logLevel(LogLevel::INFO)
-    , m_logFile(nullptr)
-    , m_logStream(nullptr)
-    , m_consoleOutput(true)
-    , m_fileOutput(true)
-    , m_dateFormat("yyyy-MM-dd hh:mm:ss.zzz")
-    , m_messageFormat("[%timestamp%] [%level%] %message%") {
-    
-    // 设置默认日志文件路径
-    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
-    QDir().mkpath(logDir);
-    m_logFilePath = logDir + "/fantasy_legend.log";
-    
-    // 初始化日志文件
-    if (m_fileOutput) {
-        setLogFile(m_logFilePath);
-    }
+Logger::Logger() 
+    : level_(LogLevel::INFO)
+    , format_("%timestamp% [%level%] [%filename%:%line%] [%thread%] %message%")
+    , startTime_(std::chrono::steady_clock::now())
+    , asyncEnabled_(false) {
 }
 
 Logger::~Logger() {
-    if (m_logStream) {
-        m_logStream->flush();
-        delete m_logStream;
-    }
-    if (m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
+    if (asyncQueue_) {
+        asyncQueue_->stop();
     }
 }
 
-void Logger::debug(const QString& message) {
-    instance()->log(LogLevel::DEBUG, message);
+void Logger::setLevel(LogLevel level) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    level_ = level;
 }
 
-void Logger::info(const QString& message) {
-    instance()->log(LogLevel::INFO, message);
-}
-
-void Logger::warning(const QString& message) {
-    instance()->log(LogLevel::WARNING, message);
-}
-
-void Logger::error(const QString& message) {
-    instance()->log(LogLevel::ERROR, message);
-}
-
-void Logger::critical(const QString& message) {
-    instance()->log(LogLevel::CRITICAL, message);
-}
-
-void Logger::setLogLevel(LogLevel level) {
-    m_logLevel = level;
-}
-
-LogLevel Logger::getLogLevel() const {
-    return m_logLevel;
-}
-
-void Logger::setLogFile(const QString& filePath) {
-    QMutexLocker locker(&s_mutex);
+void Logger::addSink(LogSinkPtr sink) {
+    if (!sink) return;
     
-    // 关闭现有文件
-    if (m_logStream) {
-        m_logStream->flush();
-        delete m_logStream;
-        m_logStream = nullptr;
-    }
-    if (m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
-        m_logFile = nullptr;
-    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    // 检查是否已存在同名输出器
+    auto it = std::find_if(sinks_.begin(), sinks_.end(),
+        [&sink](const LogSinkPtr& existing) {
+            return existing->getName() == sink->getName();
+        });
     
-    // 打开新文件
-    m_logFilePath = filePath;
-    m_logFile = new QFile(m_logFilePath);
-    if (m_logFile->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        m_logStream = new QTextStream(m_logFile);
-        m_logStream->setCodec("UTF-8");
+    if (it != sinks_.end()) {
+        // 如果已存在，则替换
+        *it = sink;
     } else {
-        qWarning() << "Failed to open log file:" << filePath;
-        delete m_logFile;
-        m_logFile = nullptr;
+        // 如果不存在，则添加
+        sinks_.push_back(sink);
     }
 }
 
-void Logger::enableConsoleOutput(bool enable) {
-    m_consoleOutput = enable;
+void Logger::removeSink(const std::string& name) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    sinks_.erase(
+        std::remove_if(sinks_.begin(), sinks_.end(),
+            [&name](const LogSinkPtr& sink) {
+                return sink->getName() == name;
+            }),
+        sinks_.end()
+    );
 }
 
-void Logger::enableFileOutput(bool enable) {
-    m_fileOutput = enable;
-    if (enable && !m_logFile) {
-        setLogFile(m_logFilePath);
-    }
+void Logger::clearSinks() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    sinks_.clear();
 }
 
-void Logger::setDateFormat(const QString& format) {
-    m_dateFormat = format;
-}
-
-void Logger::setMessageFormat(const QString& format) {
-    m_messageFormat = format;
-}
-
-void Logger::log(LogLevel level, const QString& message) {
-    if (level < m_logLevel) {
-        return;
-    }
+void Logger::log(LogLevel level, const char* filename, int line, const std::string& message) {
+    if (level < level_) return;
     
-    QString formattedMessage = formatMessage(level, message);
+    LogMessage msg;
+    msg.level = level;
+    msg.message = message;
+    msg.timestamp = getCurrentTimestamp();
+    msg.filename = std::filesystem::path(filename).filename().string();
+    msg.line = line;
+    msg.threadId = std::this_thread::get_id();
     
-    // 控制台输出
-    if (m_consoleOutput) {
-        switch (level) {
-            case LogLevel::DEBUG:
-                qDebug().noquote() << formattedMessage;
-                break;
-            case LogLevel::INFO:
-                qInfo().noquote() << formattedMessage;
-                break;
-            case LogLevel::WARNING:
-                qWarning().noquote() << formattedMessage;
-                break;
-            case LogLevel::ERROR:
-                qCritical().noquote() << formattedMessage;
-                break;
-            case LogLevel::CRITICAL:
-                std::cerr << formattedMessage.toStdString() << std::endl;
-                break;
+    if (asyncEnabled_ && asyncQueue_) {
+        asyncQueue_->push(std::move(msg));
+    } else {
+        processLogMessage(msg);
+    }
+}
+
+void Logger::processLogMessage(const LogMessage& msg) {
+    std::string formattedMessage = formatMessage(msg);
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& sink : sinks_) {
+        if (sink && sink->isAvailable()) {
+            sink->log(msg.level, formattedMessage);
+        }
+    }
+}
+
+void Logger::flush() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& sink : sinks_) {
+        if (sink && sink->isAvailable()) {
+            sink->flush();
+        }
+    }
+}
+
+void Logger::setFormat(const std::string& format) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    format_ = format;
+}
+
+void Logger::setAsync(bool enable, size_t queueSize) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (enable == asyncEnabled_) return;
+    
+    if (enable) {
+        asyncQueue_ = std::make_unique<AsyncQueue<LogMessage>>(
+            [this](const LogMessage& msg) { processLogMessage(msg); },
+            queueSize
+        );
+    } else {
+        if (asyncQueue_) {
+            asyncQueue_->stop();
+            asyncQueue_.reset();
         }
     }
     
-    // 文件输出
-    if (m_fileOutput && m_logStream) {
-        QMutexLocker locker(&s_mutex);
-        *m_logStream << formattedMessage << Qt::endl;
-        m_logStream->flush();
+    asyncEnabled_ = enable;
+}
+
+std::string Logger::formatMessage(const LogMessage& msg) {
+    std::string result = format_;
+    
+    // 替换时间戳
+    size_t pos = result.find("%timestamp%");
+    if (pos != std::string::npos) {
+        result.replace(pos, 11, msg.timestamp);
     }
     
-    // 发送信号
-    emit logMessage(level, message);
-}
-
-QString Logger::formatMessage(LogLevel level, const QString& message) {
-    QString formatted = m_messageFormat;
-    formatted.replace("%timestamp%", getCurrentTimestamp());
-    formatted.replace("%level%", levelToString(level));
-    formatted.replace("%message%", message);
-    return formatted;
-}
-
-QString Logger::levelToString(LogLevel level) {
-    switch (level) {
-        case LogLevel::DEBUG:    return "DEBUG";
-        case LogLevel::INFO:     return "INFO";
-        case LogLevel::WARNING:  return "WARNING";
-        case LogLevel::ERROR:    return "ERROR";
-        case LogLevel::CRITICAL: return "CRITICAL";
-        default:                 return "UNKNOWN";
+    // 替换日志等级
+    pos = result.find("%level%");
+    if (pos != std::string::npos) {
+        result.replace(pos, 7, toString(msg.level));
     }
+    
+    // 替换文件名
+    pos = result.find("%filename%");
+    if (pos != std::string::npos) {
+        result.replace(pos, 10, msg.filename);
+    }
+    
+    // 替换行号
+    pos = result.find("%line%");
+    if (pos != std::string::npos) {
+        result.replace(pos, 6, std::to_string(msg.line));
+    }
+    
+    // 替换线程ID
+    pos = result.find("%thread%");
+    if (pos != std::string::npos) {
+        std::stringstream ss;
+        ss << msg.threadId;
+        result.replace(pos, 8, ss.str());
+    }
+    
+    // 替换消息内容
+    pos = result.find("%message%");
+    if (pos != std::string::npos) {
+        result.replace(pos, 9, msg.message);
+    }
+    
+    return result;
 }
 
-QString Logger::getCurrentTimestamp() {
-    return QDateTime::currentDateTime().toString(m_dateFormat);
+std::string Logger::getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()) % 1000;
+    
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S")
+       << '.' << std::setfill('0') << std::setw(3) << ms.count();
+    return ss.str();
 }
+
+// 模板方法的实现
+template<typename... Args>
+void Logger::log(LogLevel level, const char* filename, int line, const std::string& format, Args&&... args) {
+    if (level < level_) return;
+    
+    // 简单的格式化实现
+    std::string message = format;
+    // TODO: 实现更复杂的格式化逻辑
+    
+    log(level, filename, line, message);
+}
+
+} // namespace Fantasy
