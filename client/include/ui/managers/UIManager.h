@@ -1,4 +1,12 @@
-#pragma once
+/**
+ * @file UIManager.h
+ * @brief UI管理器
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#ifndef UIMANAGER_H
+#define UIMANAGER_H
 
 #include <QObject>
 #include <QString>
@@ -14,6 +22,13 @@ class QProgressBar;
 class QPushButton;
 class QWidget;
 
+namespace Fantasy {
+
+/**
+ * @brief UI管理器类
+ * 
+ * 负责管理所有UI元素和状态
+ */
 class UIManager : public QObject {
     Q_OBJECT
     
@@ -97,6 +112,11 @@ public:
     QString getCurrentLanguage() const { return m_currentLanguage; }
     QString translate(const QString& key);
     
+    // UI控制
+    void update();
+    void showUI(const QString& uiName);
+    void hideUI(const QString& uiName);
+    
 signals:
     void uiStateChanged(const QString& state);
     void characterStatusUpdated(const QString& characterName, const QVariantMap& stats);
@@ -119,7 +139,7 @@ private slots:
     void onTooltipTimeout();
     
 private:
-    UIManager();
+    UIManager(QObject* parent = nullptr);
     ~UIManager();
     
     void initializeUI();
@@ -168,3 +188,7 @@ private:
     
     static UIManager* s_instance;
 };
+
+} // namespace Fantasy
+
+#endif // UIMANAGER_H

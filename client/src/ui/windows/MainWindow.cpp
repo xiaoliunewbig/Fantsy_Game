@@ -1,421 +1,365 @@
-#include "MainWindow.h"
-#include "../core/GameEngine.h"
-#include "../utils/Logger.h"
+/**
+ * @file MainWindow.cpp
+ * @brief 幻境传说主窗口类实现
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#include "ui/windows/MainWindow.h"
+#include "ui/scenes/GameScene.h"
+#include "ui/components/MainMenu.h"
+#include "ui/components/PauseMenu.h"
+#include "ui/managers/UIManager.h"
+#include "controllers/GameController.h"
+#include "network/NetworkManager.h"
+#include "utils/Logger.h"
 #include <QApplication>
-#include <QPushButton>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QStyle>
-#include <QScreen>
+#include <QMenuBar>
+#include <QStatusBar>
 #include <QMessageBox>
+#include <QScreen>
 #include <QKeyEvent>
-#include <QResizeEvent>
 #include <QCloseEvent>
+#include <QShowEvent>
+#include <QResizeEvent>
+#include <QFile>
+#include <QTextStream>
+#include <QDir>
+#include <QStandardPaths>
+#include <QElapsedTimer>
+
+namespace Fantasy {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_stackedWidget(new QStackedWidget(this))
+    , m_stackedWidget(nullptr)
     , m_mainMenu(nullptr)
+    , m_gameScene(nullptr)
     , m_pauseMenu(nullptr)
-    , m_settingsMenu(nullptr)
-    , m_gameScene(new GameScene(this))
-    , m_uiManager(new UIManager(this))
-    , m_currentState(GameState::MENU)
-    , m_previousState(GameState::MENU)
+    , m_settingsWidget(nullptr)
+    , m_loadingWidget(nullptr)
+    , m_currentState(GameState::MAIN_MENU)
+    , m_previousState(GameState::MAIN_MENU)
     , m_isFullscreen(false)
-    , m_windowWidth(1280)
-    , m_windowHeight(720)
-    , m_updateTimer(new QTimer(this)) {
+    , m_updateTimer(nullptr)
+    , m_fpsTimer(nullptr)
+    , m_settings(nullptr)
+    , m_frameCount(0)
+    , m_lastFpsTime(0.0)
+    , m_currentFps(0.0)
+{
+    CLIENT_LOG_INFO("Creating MainWindow");
     
-    setWindowTitle("幻境传说");
-    setMinimumSize(1280, 720);
-    resize(m_windowWidth, m_windowHeight);
-    centerWindow();
+    // 初始化设置
+    m_settings = new QSettings("FantasyLegend", "Client", this);
     
+    // 设置窗口属性
+    setWindowTitle("幻境传说 - Fantasy Legend");
+    setMinimumSize(1024, 768);
+    resize(1280, 720);
+    
+    // 初始化UI
     setupUI();
     setupConnections();
-    applyStyles();
     
-    // 启动更新定时器
-    m_updateTimer->start(16); // ~60 FPS
+    // 加载设置
+    loadSettings();
+    applySettings();
     
-    Logger::info("MainWindow initialized successfully");
-}
-
-MainWindow::~MainWindow() {
-    Logger::info("MainWindow destroyed");
-}
-
-void MainWindow::setupUI() {
-    setCentralWidget(m_stackedWidget);
+    // 应用样式
+    applyStylesheet();
     
-    createMainMenu();
-    createPauseMenu();
-    createSettingsMenu();
+    // 初始化定时器
+    m_updateTimer = new QTimer(this);
+    m_updateTimer->setInterval(16); // ~60 FPS
+    connect(m_updateTimer, &QTimer::timeout, this, &MainWindow::update);
     
-    m_stackedWidget->addWidget(m_mainMenu);
-    m_stackedWidget->addWidget(m_gameScene);
-    m_stackedWidget->addWidget(m_pauseMenu);
-    m_stackedWidget->addWidget(m_settingsMenu);
+    m_fpsTimer = new QTimer(this);
+    m_fpsTimer->setInterval(1000); // 1秒更新一次FPS
+    connect(m_fpsTimer, &QTimer::timeout, [this]() {
+        m_currentFps = m_frameCount;
+        m_frameCount = 0;
+        statusBar()->showMessage(QString("FPS: %1").arg(m_currentFps));
+    });
     
+    // 居中显示窗口
+    centerOnScreen();
+    
+    // 显示主菜单
     showMainMenu();
+    
+    CLIENT_LOG_INFO("MainWindow created successfully");
 }
 
-void MainWindow::createMainMenu() {
-    m_mainMenu = new QWidget();
-    auto layout = new QVBoxLayout(m_mainMenu);
+MainWindow::~MainWindow()
+{
+    CLIENT_LOG_INFO("Destroying MainWindow");
     
-    // 标题
-    auto titleLabel = new QLabel("幻境传说");
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("font-size: 48px; font-weight: bold; color: #FFD700; margin: 50px;");
-    layout->addWidget(titleLabel);
+    // 保存设置
+    saveSettings();
     
-    // 副标题
-    auto subtitleLabel = new QLabel("Fantasy Legend");
-    subtitleLabel->setAlignment(Qt::AlignCenter);
-    subtitleLabel->setStyleSheet("font-size: 18px; color: #CCCCCC; margin-bottom: 50px;");
-    layout->addWidget(subtitleLabel);
-    
-    layout->addStretch();
-    
-    // 按钮容器
-    auto buttonContainer = new QWidget();
-    auto buttonLayout = new QVBoxLayout(buttonContainer);
-    buttonLayout->setSpacing(15);
-    buttonLayout->setContentsMargins(100, 0, 100, 0);
-    
-    // 按钮
-    auto newGameBtn = new QPushButton("新游戏");
-    auto loadGameBtn = new QPushButton("加载游戏");
-    auto settingsBtn = new QPushButton("设置");
-    auto exitBtn = new QPushButton("退出");
-    
-    connect(newGameBtn, &QPushButton::clicked, this, &MainWindow::onNewGameClicked);
-    connect(loadGameBtn, &QPushButton::clicked, this, &MainWindow::onLoadGameClicked);
-    connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::onSettingsClicked);
-    connect(exitBtn, &QPushButton::clicked, this, &MainWindow::onExitClicked);
-    
-    buttonLayout->addWidget(newGameBtn);
-    buttonLayout->addWidget(loadGameBtn);
-    buttonLayout->addWidget(settingsBtn);
-    buttonLayout->addWidget(exitBtn);
-    
-    layout->addWidget(buttonContainer);
-    layout->addStretch();
-    
-    // 版权信息
-    auto copyrightLabel = new QLabel("© 2024 Fantasy Legend. All rights reserved.");
-    copyrightLabel->setAlignment(Qt::AlignCenter);
-    copyrightLabel->setStyleSheet("font-size: 12px; color: #666666; margin: 20px;");
-    layout->addWidget(copyrightLabel);
-}
-
-void MainWindow::createPauseMenu() {
-    m_pauseMenu = new QWidget();
-    auto layout = new QVBoxLayout(m_pauseMenu);
-    
-    // 半透明背景
-    m_pauseMenu->setStyleSheet("background-color: rgba(0, 0, 0, 0.8);");
-    
-    // 暂停标题
-    auto pauseLabel = new QLabel("游戏暂停");
-    pauseLabel->setAlignment(Qt::AlignCenter);
-    pauseLabel->setStyleSheet("font-size: 36px; font-weight: bold; color: #FFFFFF; margin: 50px;");
-    layout->addWidget(pauseLabel);
-    
-    layout->addStretch();
-    
-    // 按钮容器
-    auto buttonContainer = new QWidget();
-    auto buttonLayout = new QVBoxLayout(buttonContainer);
-    buttonLayout->setSpacing(15);
-    buttonLayout->setContentsMargins(100, 0, 100, 0);
-    
-    // 按钮
-    auto resumeBtn = new QPushButton("继续游戏");
-    auto saveGameBtn = new QPushButton("保存游戏");
-    auto loadGameBtn = new QPushButton("加载游戏");
-    auto settingsBtn = new QPushButton("设置");
-    auto mainMenuBtn = new QPushButton("返回主菜单");
-    
-    connect(resumeBtn, &QPushButton::clicked, this, &MainWindow::onResumeClicked);
-    connect(saveGameBtn, &QPushButton::clicked, this, &MainWindow::onSaveGameClicked);
-    connect(loadGameBtn, &QPushButton::clicked, this, &MainWindow::onLoadGameFromMenuClicked);
-    connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::onSettingsClicked);
-    connect(mainMenuBtn, &QPushButton::clicked, this, &MainWindow::onBackToMainMenuClicked);
-    
-    buttonLayout->addWidget(resumeBtn);
-    buttonLayout->addWidget(saveGameBtn);
-    buttonLayout->addWidget(loadGameBtn);
-    buttonLayout->addWidget(settingsBtn);
-    buttonLayout->addWidget(mainMenuBtn);
-    
-    layout->addWidget(buttonContainer);
-    layout->addStretch();
-}
-
-void MainWindow::createSettingsMenu() {
-    m_settingsMenu = new QWidget();
-    auto layout = new QVBoxLayout(m_settingsMenu);
-    
-    // 设置标题
-    auto titleLabel = new QLabel("设置");
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("font-size: 36px; font-weight: bold; color: #FFFFFF; margin: 30px;");
-    layout->addWidget(titleLabel);
-    
-    // 设置内容
-    auto settingsContainer = new QWidget();
-    auto settingsLayout = new QVBoxLayout(settingsContainer);
-    
-    // 这里可以添加各种设置选项
-    auto graphicsLabel = new QLabel("图形设置");
-    graphicsLabel->setStyleSheet("font-size: 18px; color: #FFFFFF; margin: 10px;");
-    settingsLayout->addWidget(graphicsLabel);
-    
-    auto audioLabel = new QLabel("音频设置");
-    audioLabel->setStyleSheet("font-size: 18px; color: #FFFFFF; margin: 10px;");
-    settingsLayout->addWidget(audioLabel);
-    
-    auto controlLabel = new QLabel("控制设置");
-    controlLabel->setStyleSheet("font-size: 18px; color: #FFFFFF; margin: 10px;");
-    settingsLayout->addWidget(controlLabel);
-    
-    layout->addWidget(settingsContainer);
-    layout->addStretch();
-    
-    // 返回按钮
-    auto backBtn = new QPushButton("返回");
-    backBtn->setStyleSheet("QPushButton { font-size: 16px; padding: 10px; margin: 20px; }");
-    connect(backBtn, &QPushButton::clicked, [this]() {
-        if (m_previousState == GameState::MENU) {
-            showMainMenu();
-        } else {
-            showPauseMenu();
-        }
-    });
-    layout->addWidget(backBtn);
-}
-
-void MainWindow::setupConnections() {
-    // 连接游戏引擎信号
-    if (GameEngine::instance()) {
-        connect(GameEngine::instance(), &GameEngine::gameStateChanged,
-                this, &MainWindow::onGameStateChanged);
+    // 停止定时器
+    if (m_updateTimer) {
+        m_updateTimer->stop();
+    }
+    if (m_fpsTimer) {
+        m_fpsTimer->stop();
     }
     
-    // 连接UI管理器信号
-    connect(m_uiManager, &UIManager::uiStateChanged,
-            this, [this](const QString& state) {
-        Logger::debug(QString("UI state changed: %1").arg(state));
-    });
+    CLIENT_LOG_INFO("MainWindow destroyed");
 }
 
-void MainWindow::applyStyles() {
-    // 主窗口样式
-    setStyleSheet(R"(
-        QMainWindow {
-            background-color: #1a1a1a;
-        }
-    )");
+void MainWindow::showMainMenu()
+{
+    CLIENT_LOG_DEBUG("Showing main menu");
+    m_previousState = m_currentState;
+    m_currentState = GameState::MAIN_MENU;
     
-    // 按钮样式
-    QString buttonStyle = R"(
-        QPushButton {
-            font-size: 18px;
-            padding: 15px;
-            margin: 5px;
-            background-color: #4A4A4A;
-            color: white;
-            border: 2px solid #666;
-            border-radius: 8px;
-            min-width: 200px;
-        }
-        QPushButton:hover {
-            background-color: #666;
-            border-color: #888;
-        }
-        QPushButton:pressed {
-            background-color: #333;
-            border-color: #555;
-        }
-        QPushButton:disabled {
-            background-color: #2a2a2a;
-            color: #666;
-            border-color: #444;
-        }
-    )";
-    
-    // 应用按钮样式到所有按钮
-    QList<QPushButton*> buttons = findChildren<QPushButton*>();
-    for (QPushButton* button : buttons) {
-        button->setStyleSheet(buttonStyle);
+    if (m_stackedWidget) {
+        m_stackedWidget->setCurrentWidget(m_mainMenu);
     }
+    
+    // 停止游戏更新
+    if (m_updateTimer) {
+        m_updateTimer->stop();
+    }
+    if (m_fpsTimer) {
+        m_fpsTimer->stop();
+    }
+    
+    emit onGameStateChanged(m_currentState);
 }
 
-void MainWindow::showMainMenu() {
-    m_currentState = GameState::MENU;
-    m_stackedWidget->setCurrentWidget(m_mainMenu);
-    Logger::info("Showing main menu");
-}
-
-void MainWindow::showGameScene() {
+void MainWindow::showGameScene()
+{
+    CLIENT_LOG_DEBUG("Showing game scene");
+    m_previousState = m_currentState;
     m_currentState = GameState::PLAYING;
-    m_stackedWidget->setCurrentWidget(m_gameScene);
-    m_gameScene->setFocus();
-    Logger::info("Showing game scene");
+    
+    if (m_stackedWidget) {
+        m_stackedWidget->setCurrentWidget(m_gameScene);
+    }
+    
+    // 启动游戏更新
+    if (m_updateTimer) {
+        m_updateTimer->start();
+    }
+    if (m_fpsTimer) {
+        m_fpsTimer->start();
+    }
+    
+    emit gameStarted();
+    emit onGameStateChanged(m_currentState);
 }
 
-void MainWindow::showPauseMenu() {
+void MainWindow::showPauseMenu()
+{
+    CLIENT_LOG_DEBUG("Showing pause menu");
     m_previousState = m_currentState;
     m_currentState = GameState::PAUSED;
+    
+    if (m_stackedWidget) {
     m_stackedWidget->setCurrentWidget(m_pauseMenu);
-    Logger::info("Showing pause menu");
+    }
+    
+    // 暂停游戏更新
+    if (m_updateTimer) {
+        m_updateTimer->stop();
+    }
+    if (m_fpsTimer) {
+        m_fpsTimer->stop();
+    }
+    
+    emit gamePaused();
+    emit onGameStateChanged(m_currentState);
 }
 
-void MainWindow::showSettingsMenu() {
+void MainWindow::showSettings()
+{
+    CLIENT_LOG_DEBUG("Showing settings");
     m_previousState = m_currentState;
-    m_currentState = GameState::MENU;
-    m_stackedWidget->setCurrentWidget(m_settingsMenu);
-    Logger::info("Showing settings menu");
+    m_currentState = GameState::SETTINGS;
+    
+    if (m_stackedWidget) {
+        m_stackedWidget->setCurrentWidget(m_settingsWidget);
+    }
+    
+    emit onGameStateChanged(m_currentState);
 }
 
-void MainWindow::showInventory() {
+void MainWindow::showLoadingScreen()
+{
+    CLIENT_LOG_DEBUG("Showing loading screen");
     m_previousState = m_currentState;
-    m_currentState = GameState::INVENTORY;
-    // 这里可以显示背包界面
-    Logger::info("Showing inventory");
+    m_currentState = GameState::LOADING;
+    
+    if (m_stackedWidget) {
+        m_stackedWidget->setCurrentWidget(m_loadingWidget);
+    }
+    
+    emit onGameStateChanged(m_currentState);
 }
 
-void MainWindow::showDialogue() {
-    m_previousState = m_currentState;
-    m_currentState = GameState::DIALOGUE;
-    // 这里可以显示对话界面
-    Logger::info("Showing dialogue");
-}
-
-void MainWindow::setFullscreen(bool fullscreen) {
+void MainWindow::setFullscreen(bool fullscreen)
+{
+    if (m_isFullscreen == fullscreen) {
+        return;
+    }
+    
     m_isFullscreen = fullscreen;
+    
     if (fullscreen) {
+        // 保存当前窗口状态
+        m_normalSize = size();
+        m_normalPosition = pos();
+        
+        // 进入全屏
         showFullScreen();
+        CLIENT_LOG_INFO("Entered fullscreen mode");
     } else {
+        // 退出全屏
         showNormal();
-        resize(m_windowWidth, m_windowHeight);
-        centerWindow();
+        resize(m_normalSize);
+        move(m_normalPosition);
+        CLIENT_LOG_INFO("Exited fullscreen mode");
     }
 }
 
-void MainWindow::setWindowSize(int width, int height) {
-    m_windowWidth = width;
-    m_windowHeight = height;
-    if (!m_isFullscreen) {
-        resize(width, height);
-        centerWindow();
-    }
+void MainWindow::toggleFullscreen()
+{
+    setFullscreen(!m_isFullscreen);
 }
 
-void MainWindow::centerWindow() {
-    QScreen* screen = QGuiApplication::primaryScreen();
+void MainWindow::centerOnScreen()
+{
+    QScreen* screen = QApplication::primaryScreen();
+    if (screen) {
     QRect screenGeometry = screen->geometry();
     int x = (screenGeometry.width() - width()) / 2;
     int y = (screenGeometry.height() - height()) / 2;
     move(x, y);
 }
+}
 
-void MainWindow::closeEvent(QCloseEvent* event) {
-    Logger::info("Application closing");
+void MainWindow::loadSettings()
+{
+    CLIENT_LOG_DEBUG("Loading settings");
     
-    // 保存游戏状态
-    if (GameEngine::instance()) {
-        GameEngine::instance()->saveGame("autosave");
+    // 窗口设置
+    m_isFullscreen = m_settings->value("window/fullscreen", false).toBool();
+    m_normalSize = m_settings->value("window/size", QSize(1280, 720)).toSize();
+    m_normalPosition = m_settings->value("window/position", QPoint(100, 100)).toPoint();
+    
+    // 游戏设置
+    // TODO: 加载游戏相关设置
+    
+    CLIENT_LOG_DEBUG("Settings loaded");
+}
+
+void MainWindow::saveSettings()
+{
+    CLIENT_LOG_DEBUG("Saving settings");
+    
+    // 窗口设置
+    m_settings->setValue("window/fullscreen", m_isFullscreen);
+    m_settings->setValue("window/size", m_normalSize);
+    m_settings->setValue("window/position", m_normalPosition);
+    
+    // 游戏设置
+    // TODO: 保存游戏相关设置
+    
+    m_settings->sync();
+    CLIENT_LOG_DEBUG("Settings saved");
+}
+
+void MainWindow::applySettings()
+{
+    CLIENT_LOG_DEBUG("Applying settings");
+    
+    // 应用窗口设置
+    if (m_isFullscreen) {
+        showFullScreen();
+    } else {
+        showNormal();
+        resize(m_normalSize);
+        move(m_normalPosition);
     }
     
-    event->accept();
+    // 应用游戏设置
+    // TODO: 应用游戏相关设置
+    
+    CLIENT_LOG_DEBUG("Settings applied");
 }
 
-void MainWindow::keyPressEvent(QKeyEvent* event) {
-    switch (event->key()) {
-        case Qt::Key_Escape:
-            onEscapePressed();
+void MainWindow::onGameStateChanged(GameState newState)
+{
+    CLIENT_LOG_DEBUG("Game state changed to: %d", static_cast<int>(newState));
+    
+    // 更新状态栏
+    QString stateText;
+    switch (newState) {
+        case GameState::MAIN_MENU:
+            stateText = "主菜单";
             break;
-        case Qt::Key_Space:
-            onSpacePressed();
+        case GameState::PLAYING:
+            stateText = "游戏中";
             break;
-        case Qt::Key_Return:
-        case Qt::Key_Enter:
-            onEnterPressed();
+        case GameState::PAUSED:
+            stateText = "暂停";
             break;
-        case Qt::Key_F11:
-            setFullscreen(!m_isFullscreen);
+        case GameState::SETTINGS:
+            stateText = "设置";
             break;
-        default:
-            QMainWindow::keyPressEvent(event);
+        case GameState::LOADING:
+            stateText = "加载中";
+            break;
+        case GameState::EXIT:
+            stateText = "退出";
             break;
     }
-}
-
-void MainWindow::keyReleaseEvent(QKeyEvent* event) {
-    QMainWindow::keyReleaseEvent(event);
-}
-
-void MainWindow::resizeEvent(QResizeEvent* event) {
-    QMainWindow::resizeEvent(event);
-    if (!m_isFullscreen) {
-        m_windowWidth = width();
-        m_windowHeight = height();
-    }
-}
-
-void MainWindow::onGameStateChanged(GameState state) {
-    m_currentState = state;
-    Logger::info(QString("Game state changed to: %1").arg(static_cast<int>(state)));
-}
-
-void MainWindow::onNewGameClicked() {
-    Logger::info("New game button clicked");
     
-    // 这里可以添加新游戏确认对话框
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, "新游戏", "确定要开始新游戏吗？\n当前游戏进度将会丢失。",
-        QMessageBox::Yes | QMessageBox::No
-    );
+    statusBar()->showMessage(QString("状态: %1 | FPS: %2").arg(stateText).arg(m_currentFps));
+}
+
+void MainWindow::onNewGameClicked()
+{
+    CLIENT_LOG_INFO("New game clicked");
+    showLoadingScreen();
     
-    if (reply == QMessageBox::Yes) {
-        if (GameEngine::instance()) {
-            GameEngine::instance()->startGame();
-        }
-        showGameScene();
-    }
-}
-
-void MainWindow::onLoadGameClicked() {
-    Logger::info("Load game button clicked");
-    // 这里可以显示存档选择界面
-    showGameScene();
-}
-
-void MainWindow::onSettingsClicked() {
-    Logger::info("Settings button clicked");
-    showSettingsMenu();
-}
-
-void MainWindow::onExitClicked() {
-    Logger::info("Exit button clicked");
+    // TODO: 初始化新游戏
+    // 这里可以添加游戏初始化逻辑
     
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, "退出游戏", "确定要退出游戏吗？",
-        QMessageBox::Yes | QMessageBox::No
-    );
-    
-    if (reply == QMessageBox::Yes) {
-        QApplication::quit();
-    }
+    // 延迟切换到游戏场景
+    QTimer::singleShot(1000, this, &MainWindow::showGameScene);
 }
 
-void MainWindow::onResumeClicked() {
-    Logger::info("Resume button clicked");
+void MainWindow::onLoadGameClicked()
+{
+    CLIENT_LOG_INFO("Load game clicked");
+    showLoadingScreen();
+    
+    // TODO: 加载游戏存档
+    // 这里可以添加存档加载逻辑
+    
+    // 延迟切换到游戏场景
+    QTimer::singleShot(1000, this, &MainWindow::showGameScene);
+}
+
+void MainWindow::onSettingsClicked()
+{
+    CLIENT_LOG_INFO("Settings clicked");
+    showSettings();
+}
+
+void MainWindow::onExitClicked()
+{
+    CLIENT_LOG_INFO("Exit clicked");
+    close();
+}
+
+void MainWindow::onResumeClicked()
+{
+    CLIENT_LOG_INFO("Resume clicked");
     if (m_previousState == GameState::PLAYING) {
         showGameScene();
     } else {
@@ -423,65 +367,305 @@ void MainWindow::onResumeClicked() {
     }
 }
 
-void MainWindow::onSaveGameClicked() {
-    Logger::info("Save game button clicked");
-    if (GameEngine::instance()) {
-        GameEngine::instance()->saveGame("manual_save");
-        QMessageBox::information(this, "保存游戏", "游戏已保存！");
+void MainWindow::onBackToMainMenuClicked()
+{
+    CLIENT_LOG_INFO("Back to main menu clicked");
+    showMainMenu();
+}
+
+void MainWindow::onWindowStateChanged(Qt::WindowStates state)
+{
+    CLIENT_LOG_DEBUG("Window state changed: %d", static_cast<int>(state));
+    
+    if (state & Qt::WindowFullScreen) {
+        m_isFullscreen = true;
+    } else {
+        m_isFullscreen = false;
     }
 }
 
-void MainWindow::onLoadGameFromMenuClicked() {
-    Logger::info("Load game from menu button clicked");
-    // 这里可以显示存档选择界面
-    showGameScene();
+void MainWindow::onCloseRequested()
+{
+    CLIENT_LOG_INFO("Close requested");
+    close();
 }
 
-void MainWindow::onBackToMainMenuClicked() {
-    Logger::info("Back to main menu button clicked");
+void MainWindow::update()
+{
+    m_frameCount++;
     
+    // 更新游戏逻辑
+    if (m_gameController) {
+        m_gameController->update();
+    }
+    
+    // 更新UI
+    if (m_uiManager) {
+        m_uiManager->update();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+    CLIENT_LOG_INFO("Close event received");
+    
+    // 保存设置
+    saveSettings();
+    
+    // 确认退出
+    if (m_currentState == GameState::PLAYING) {
     QMessageBox::StandardButton reply = QMessageBox::question(
-        this, "返回主菜单", "确定要返回主菜单吗？\n当前游戏进度将会丢失。",
+            this, "确认退出", "游戏正在进行中，确定要退出吗？",
         QMessageBox::Yes | QMessageBox::No
     );
     
-    if (reply == QMessageBox::Yes) {
-        showMainMenu();
+        if (reply == QMessageBox::No) {
+            event->ignore();
+            return;
+        }
     }
+    
+    emit gameExited();
+    event->accept();
 }
 
-void MainWindow::onEscapePressed() {
-    switch (m_currentState) {
-        case GameState::PLAYING:
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+        case Qt::Key_Escape:
+            if (m_currentState == GameState::PLAYING) {
             showPauseMenu();
-            break;
-        case GameState::PAUSED:
-            onResumeClicked();
-            break;
-        case GameState::INVENTORY:
-        case GameState::DIALOGUE:
-            if (m_previousState == GameState::PLAYING) {
-                showGameScene();
-            } else {
-                showMainMenu();
+            } else if (m_currentState == GameState::PAUSED) {
+                onResumeClicked();
             }
             break;
+            
+        case Qt::Key_F11:
+            toggleFullscreen();
+            break;
+            
+        case Qt::Key_F1:
+            // TODO: 显示帮助
+            break;
+            
         default:
+            QMainWindow::keyPressEvent(event);
             break;
     }
 }
 
-void MainWindow::onSpacePressed() {
-    if (m_currentState == GameState::PLAYING) {
-        // 在游戏场景中，空格键可以暂停游戏
-        showPauseMenu();
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+    
+    // 保存窗口大小
+    if (!m_isFullscreen) {
+        m_normalSize = size();
     }
 }
 
-void MainWindow::onEnterPressed() {
-    // 回车键通常用于确认选择
-    if (m_currentState == GameState::PLAYING) {
-        // 在游戏场景中，回车键可以打开菜单
-        showPauseMenu();
+void MainWindow::showEvent(QShowEvent* event)
+{
+    QMainWindow::showEvent(event);
+    
+    // 窗口显示后的初始化
+    if (m_currentState == GameState::MAIN_MENU) {
+        // 确保主菜单可见
+        if (m_stackedWidget) {
+            m_stackedWidget->setCurrentWidget(m_mainMenu);
+        }
     }
 }
+
+void MainWindow::setupUI()
+{
+    CLIENT_LOG_DEBUG("Setting up UI");
+    
+    // 创建中央组件
+    createCentralWidget();
+    
+    // 创建菜单栏
+    createMenuBar();
+    
+    // 创建状态栏
+    createStatusBar();
+    
+    CLIENT_LOG_DEBUG("UI setup completed");
+}
+
+void MainWindow::createMenuBar()
+{
+    QMenuBar* menuBar = this->menuBar();
+    
+    // 文件菜单
+    QMenu* fileMenu = menuBar->addMenu("文件(&F)");
+    fileMenu->addAction("新建游戏(&N)", this, &MainWindow::onNewGameClicked, QKeySequence::New);
+    fileMenu->addAction("加载游戏(&L)", this, &MainWindow::onLoadGameClicked, QKeySequence::Open);
+    fileMenu->addSeparator();
+    fileMenu->addAction("设置(&S)", this, &MainWindow::onSettingsClicked, QKeySequence::Preferences);
+    fileMenu->addSeparator();
+    fileMenu->addAction("退出(&X)", this, &MainWindow::onExitClicked, QKeySequence::Quit);
+    
+    // 游戏菜单
+    QMenu* gameMenu = menuBar->addMenu("游戏(&G)");
+    gameMenu->addAction("暂停(&P)", this, &MainWindow::showPauseMenu, QKeySequence("P"));
+    gameMenu->addAction("返回主菜单(&M)", this, &MainWindow::onBackToMainMenuClicked);
+    
+    // 视图菜单
+    QMenu* viewMenu = menuBar->addMenu("视图(&V)");
+    viewMenu->addAction("全屏(&F)", this, &MainWindow::toggleFullscreen, QKeySequence("F11"));
+    
+    // 帮助菜单
+    QMenu* helpMenu = menuBar->addMenu("帮助(&H)");
+    helpMenu->addAction("关于(&A)", [this]() {
+        QMessageBox::about(this, "关于", "幻境传说 v1.0.0\n\n一个充满魔法的冒险世界");
+    });
+}
+
+void MainWindow::createStatusBar()
+{
+    QStatusBar* statusBar = this->statusBar();
+    statusBar->showMessage("就绪");
+}
+
+void MainWindow::createCentralWidget()
+{
+    // 创建堆叠窗口组件
+    m_stackedWidget = new QStackedWidget(this);
+    setCentralWidget(m_stackedWidget);
+    
+    // 创建主菜单
+    m_mainMenu = new Fantasy::MainMenu(this);
+    m_stackedWidget->addWidget(m_mainMenu);
+    
+    // 创建游戏场景
+    m_gameScene = new Fantasy::GameScene(this);
+    m_stackedWidget->addWidget(m_gameScene);
+    
+    // 创建暂停菜单
+    m_pauseMenu = new Fantasy::PauseMenu(this);
+    m_stackedWidget->addWidget(m_pauseMenu);
+    
+    // 创建设置界面
+    m_settingsWidget = new QWidget(this);
+    m_stackedWidget->addWidget(m_settingsWidget);
+    
+    // 创建加载界面
+    m_loadingWidget = new QWidget(this);
+    m_stackedWidget->addWidget(m_loadingWidget);
+    
+    // 创建管理器
+    m_uiManager = std::make_unique<Fantasy::UIManager>(this);
+    m_gameController = std::make_unique<Fantasy::GameController>(this);
+    m_networkManager = std::make_unique<Fantasy::NetworkManager>(this);
+}
+
+void MainWindow::setupConnections()
+{
+    CLIENT_LOG_DEBUG("Setting up connections");
+    
+    // 连接窗口状态变化信号
+    connect(this, &QMainWindow::windowStateChanged, 
+            this, &MainWindow::onWindowStateChanged);
+    
+    // 连接主菜单信号
+    if (m_mainMenu) {
+        connect(m_mainMenu, &Fantasy::MainMenu::newGameClicked, this, &MainWindow::onNewGameClicked);
+        connect(m_mainMenu, &Fantasy::MainMenu::loadGameClicked, this, &MainWindow::onLoadGameClicked);
+        connect(m_mainMenu, &Fantasy::MainMenu::settingsClicked, this, &MainWindow::onSettingsClicked);
+        connect(m_mainMenu, &Fantasy::MainMenu::exitClicked, this, &MainWindow::onExitClicked);
+    }
+    
+    // 连接暂停菜单信号
+    if (m_pauseMenu) {
+        connect(m_pauseMenu, &Fantasy::PauseMenu::resumeClicked, this, &MainWindow::onResumeClicked);
+        connect(m_pauseMenu, &Fantasy::PauseMenu::backToMainMenuClicked, this, &MainWindow::onBackToMainMenuClicked);
+        connect(m_pauseMenu, &Fantasy::PauseMenu::settingsClicked, this, &MainWindow::onSettingsClicked);
+    }
+    
+    CLIENT_LOG_DEBUG("Connections setup completed");
+}
+
+void MainWindow::applyStylesheet()
+{
+    CLIENT_LOG_DEBUG("Applying stylesheet");
+    
+    // 尝试加载自定义样式表
+    QString stylesheetPath = "assets/ui/styles/main.qss";
+    if (QFile::exists(stylesheetPath)) {
+        loadStylesheet(stylesheetPath);
+    } else {
+        // 使用默认样式
+        QString defaultStyle = R"(
+            QMainWindow {
+                background-color: #2a2a2a;
+                color: #ffffff;
+            }
+            
+            QMenuBar {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border-bottom: 1px solid #555555;
+            }
+            
+            QMenuBar::item {
+                background-color: transparent;
+                padding: 5px 10px;
+            }
+            
+            QMenuBar::item:selected {
+                background-color: #555555;
+            }
+            
+            QMenu {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border: 1px solid #555555;
+            }
+            
+            QMenu::item {
+                padding: 5px 20px;
+            }
+            
+            QMenu::item:selected {
+                background-color: #555555;
+            }
+            
+            QStatusBar {
+                background-color: #3a3a3a;
+                color: #ffffff;
+                border-top: 1px solid #555555;
+            }
+        )";
+        
+        setStyleSheet(defaultStyle);
+    }
+    
+    CLIENT_LOG_DEBUG("Stylesheet applied");
+}
+
+void MainWindow::loadStylesheet(const QString& filename)
+{
+    QFile file(filename);
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        QTextStream stream(&file);
+        QString stylesheet = stream.readAll();
+        setStyleSheet(stylesheet);
+        CLIENT_LOG_INFO("Loaded stylesheet from: %s", filename.toUtf8().constData());
+    } else {
+        CLIENT_LOG_WARN("Failed to load stylesheet from: %s", filename.toUtf8().constData());
+    }
+}
+
+void MainWindow::logMessage(const QString& message)
+{
+    CLIENT_LOG_INFO("%s", message.toUtf8().constData());
+}
+
+void MainWindow::showError(const QString& title, const QString& message)
+{
+    QMessageBox::critical(this, title, message);
+    CLIENT_LOG_ERROR("%s: %s", title.toUtf8().constData(), message.toUtf8().constData());
+}
+
+} // namespace Fantasy

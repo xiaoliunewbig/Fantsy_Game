@@ -1,67 +1,65 @@
-#pragma once
+/**
+ * @file Logger.h
+ * @brief 日志工具
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
 
-#include <QObject>
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <QString>
-#include <QFile>
-#include <QTextStream>
-#include <QMutex>
-#include <QDateTime>
+#include <QDebug>
 
+namespace Fantasy {
+
+/**
+ * @brief 日志级别枚举
+ */
 enum class LogLevel {
     DEBUG,
     INFO,
-    WARNING,
+    WARN,
     ERROR,
-    CRITICAL
+    FATAL
 };
 
-class Logger : public QObject {
-    Q_OBJECT
-    
+/**
+ * @brief 日志工具类
+ * 
+ * 提供统一的日志记录功能
+ */
+class Logger
+{
 public:
-    static Logger* instance();
+    // 初始化日志系统
+    static void initialize();
+    
+    // 设置日志级别
+    static void setLogLevel(LogLevel level);
     
     // 日志记录方法
     static void debug(const QString& message);
     static void info(const QString& message);
-    static void warning(const QString& message);
+    static void warn(const QString& message);
     static void error(const QString& message);
-    static void critical(const QString& message);
+    static void fatal(const QString& message);
     
-    // 日志级别控制
-    void setLogLevel(LogLevel level);
-    LogLevel getLogLevel() const;
-    
-    // 日志文件控制
-    void setLogFile(const QString& filePath);
-    void enableConsoleOutput(bool enable);
-    void enableFileOutput(bool enable);
-    
-    // 日志格式化
-    void setDateFormat(const QString& format);
-    void setMessageFormat(const QString& format);
-    
-signals:
-    void logMessage(LogLevel level, const QString& message);
-    
+    // 格式化日志消息
+    static QString formatMessage(LogLevel level, const QString& message);
+
 private:
-    Logger();
-    ~Logger();
-    
-    void log(LogLevel level, const QString& message);
-    QString formatMessage(LogLevel level, const QString& message);
-    QString levelToString(LogLevel level);
-    QString getCurrentTimestamp();
-    
-    static Logger* s_instance;
-    static QMutex s_mutex;
-    
-    LogLevel m_logLevel;
-    QString m_logFilePath;
-    QFile* m_logFile;
-    QTextStream* m_logStream;
-    bool m_consoleOutput;
-    bool m_fileOutput;
-    QString m_dateFormat;
-    QString m_messageFormat;
+    static LogLevel s_currentLevel;
+    static bool s_initialized;
 };
+
+// 日志宏定义
+#define CLIENT_LOG_DEBUG(msg, ...) Fantasy::Logger::debug(QString(msg).arg(__VA_ARGS__))
+#define CLIENT_LOG_INFO(msg, ...) Fantasy::Logger::info(QString(msg).arg(__VA_ARGS__))
+#define CLIENT_LOG_WARN(msg, ...) Fantasy::Logger::warn(QString(msg).arg(__VA_ARGS__))
+#define CLIENT_LOG_ERROR(msg, ...) Fantasy::Logger::error(QString(msg).arg(__VA_ARGS__))
+#define CLIENT_LOG_FATAL(msg, ...) Fantasy::Logger::fatal(QString(msg).arg(__VA_ARGS__))
+
+} // namespace Fantasy
+
+#endif // LOGGER_H

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "fantasy-legend": {
+      "command": "/root/Fantasy_Legend/Fantsy_Game/mcp/start_mcp.sh",
+      "args": [],
+      "env": {
+        "FANTASY_LEGEND_PROJECT_ROOT": "/root/Fantasy_Legend/Fantsy_Game",
+        "FANTASY_LEGEND_QT_PATH": "/home/pck/tools/qtlib"
+      }
+    }
+  }
+} 

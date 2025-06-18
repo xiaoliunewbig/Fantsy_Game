@@ -1,0 +1,5 @@
+/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles/FantasyLegend_Client.dir
+/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles/edit_cache.dir
+/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles/rebuild_cache.dir
+/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps.dir
+/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles/FantasyLegend_Client_autogen.dir

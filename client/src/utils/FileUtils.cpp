@@ -1,11 +1,24 @@
-#include "FileUtils.h"
-#include "Logger.h"
+/**
+ * @file FileUtils.cpp
+ * @brief 文件工具实现
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#include "utils/FileUtils.h"
+#include "utils/Logger.h"
 #include <QStandardPaths>
 #include <QDateTime>
 #include <QFileSystemWatcher>
 #include <QCoreApplication>
 #include <QDirIterator>
 #include <QDebug>
+#include <QFileInfo>
+#include <QDir>
+#include <QCryptographicHash>
+#include <QFile>
+
+namespace Fantasy {
 
 FileUtils* FileUtils::s_instance = nullptr;
 
@@ -27,7 +40,7 @@ FileUtils::~FileUtils() {
 }
 
 bool FileUtils::fileExists(const QString& filePath) {
-    return QFile::exists(filePath);
+    return QFileInfo::exists(filePath);
 }
 
 bool FileUtils::directoryExists(const QString& dirPath) {
@@ -393,3 +406,54 @@ void FileUtils::stopWatchingFile(const QString& filePath) {
     Q_UNUSED(filePath)
     // 停止文件监控
 }
+
+QString FileUtils::getApplicationDir()
+{
+    return QCoreApplication::applicationDirPath();
+}
+
+QString FileUtils::getDataDir()
+{
+    QString dataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (dataDir.isEmpty()) {
+        dataDir = getApplicationDir() + "/data";
+    }
+    return dataDir;
+}
+
+QString FileUtils::getConfigDir()
+{
+    QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    if (configDir.isEmpty()) {
+        configDir = getApplicationDir() + "/config";
+    }
+    return configDir;
+}
+
+QString FileUtils::getLogDir()
+{
+    QString logDir = getDataDir() + "/logs";
+    return logDir;
+}
+
+QString FileUtils::getFileName(const QString& path)
+{
+    return QFileInfo(path).fileName();
+}
+
+QString FileUtils::getFileHash(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QFile::ReadOnly)) {
+        return QString();
+    }
+    
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    if (hash.addData(&file)) {
+        return hash.result().toHex();
+    }
+    
+    return QString();
+}
+
+} // namespace Fantasy

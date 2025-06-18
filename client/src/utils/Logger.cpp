@@ -1,186 +1,108 @@
-#include "Logger.h"
+/**
+ * @file Logger.cpp
+ * @brief 日志工具实现
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#include "utils/Logger.h"
+#include <QDateTime>
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
 #include <QDir>
-#include <QStandardPaths>
-#include <iostream>
 
-Logger* Logger::s_instance = nullptr;
-QMutex Logger::s_mutex;
+namespace Fantasy {
 
-Logger* Logger::instance() {
-    if (!s_instance) {
-        QMutexLocker locker(&s_mutex);
-        if (!s_instance) {
-            s_instance = new Logger();
-        }
-    }
-    return s_instance;
-}
+// 静态成员初始化
+LogLevel Logger::s_currentLevel = LogLevel::INFO;
+bool Logger::s_initialized = false;
 
-Logger::Logger()
-    : m_logLevel(LogLevel::INFO)
-    , m_logFile(nullptr)
-    , m_logStream(nullptr)
-    , m_consoleOutput(true)
-    , m_fileOutput(true)
-    , m_dateFormat("yyyy-MM-dd hh:mm:ss.zzz")
-    , m_messageFormat("[%timestamp%] [%level%] %message%") {
-    
-    // 设置默认日志文件路径
-    QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
-    QDir().mkpath(logDir);
-    m_logFilePath = logDir + "/fantasy_legend.log";
-    
-    // 初始化日志文件
-    if (m_fileOutput) {
-        setLogFile(m_logFilePath);
-    }
-}
-
-Logger::~Logger() {
-    if (m_logStream) {
-        m_logStream->flush();
-        delete m_logStream;
-    }
-    if (m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
-    }
-}
-
-void Logger::debug(const QString& message) {
-    instance()->log(LogLevel::DEBUG, message);
-}
-
-void Logger::info(const QString& message) {
-    instance()->log(LogLevel::INFO, message);
-}
-
-void Logger::warning(const QString& message) {
-    instance()->log(LogLevel::WARNING, message);
-}
-
-void Logger::error(const QString& message) {
-    instance()->log(LogLevel::ERROR, message);
-}
-
-void Logger::critical(const QString& message) {
-    instance()->log(LogLevel::CRITICAL, message);
-}
-
-void Logger::setLogLevel(LogLevel level) {
-    m_logLevel = level;
-}
-
-LogLevel Logger::getLogLevel() const {
-    return m_logLevel;
-}
-
-void Logger::setLogFile(const QString& filePath) {
-    QMutexLocker locker(&s_mutex);
-    
-    // 关闭现有文件
-    if (m_logStream) {
-        m_logStream->flush();
-        delete m_logStream;
-        m_logStream = nullptr;
-    }
-    if (m_logFile) {
-        m_logFile->close();
-        delete m_logFile;
-        m_logFile = nullptr;
-    }
-    
-    // 打开新文件
-    m_logFilePath = filePath;
-    m_logFile = new QFile(m_logFilePath);
-    if (m_logFile->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        m_logStream = new QTextStream(m_logFile);
-        m_logStream->setCodec("UTF-8");
-    } else {
-        qWarning() << "Failed to open log file:" << filePath;
-        delete m_logFile;
-        m_logFile = nullptr;
-    }
-}
-
-void Logger::enableConsoleOutput(bool enable) {
-    m_consoleOutput = enable;
-}
-
-void Logger::enableFileOutput(bool enable) {
-    m_fileOutput = enable;
-    if (enable && !m_logFile) {
-        setLogFile(m_logFilePath);
-    }
-}
-
-void Logger::setDateFormat(const QString& format) {
-    m_dateFormat = format;
-}
-
-void Logger::setMessageFormat(const QString& format) {
-    m_messageFormat = format;
-}
-
-void Logger::log(LogLevel level, const QString& message) {
-    if (level < m_logLevel) {
+void Logger::initialize()
+{
+    if (s_initialized) {
         return;
     }
     
-    QString formattedMessage = formatMessage(level, message);
-    
-    // 控制台输出
-    if (m_consoleOutput) {
-        switch (level) {
-            case LogLevel::DEBUG:
-                qDebug().noquote() << formattedMessage;
-                break;
-            case LogLevel::INFO:
-                qInfo().noquote() << formattedMessage;
-                break;
-            case LogLevel::WARNING:
-                qWarning().noquote() << formattedMessage;
-                break;
-            case LogLevel::ERROR:
-                qCritical().noquote() << formattedMessage;
-                break;
-            case LogLevel::CRITICAL:
-                std::cerr << formattedMessage.toStdString() << std::endl;
-                break;
-        }
+    // 创建日志目录
+    QDir logDir("logs");
+    if (!logDir.exists()) {
+        logDir.mkpath(".");
     }
     
-    // 文件输出
-    if (m_fileOutput && m_logStream) {
-        QMutexLocker locker(&s_mutex);
-        *m_logStream << formattedMessage << Qt::endl;
-        m_logStream->flush();
+    s_initialized = true;
+    info("Logger initialized");
+}
+
+void Logger::setLogLevel(LogLevel level)
+{
+    s_currentLevel = level;
+}
+
+void Logger::debug(const QString& message)
+{
+    if (s_currentLevel <= LogLevel::DEBUG) {
+        QString formattedMessage = formatMessage(LogLevel::DEBUG, message);
+        qDebug().noquote() << formattedMessage;
     }
+}
+
+void Logger::info(const QString& message)
+{
+    if (s_currentLevel <= LogLevel::INFO) {
+        QString formattedMessage = formatMessage(LogLevel::INFO, message);
+        qInfo().noquote() << formattedMessage;
+    }
+}
+
+void Logger::warn(const QString& message)
+{
+    if (s_currentLevel <= LogLevel::WARN) {
+        QString formattedMessage = formatMessage(LogLevel::WARN, message);
+        qWarning().noquote() << formattedMessage;
+    }
+}
+
+void Logger::error(const QString& message)
+{
+    if (s_currentLevel <= LogLevel::ERROR) {
+        QString formattedMessage = formatMessage(LogLevel::ERROR, message);
+        qCritical().noquote() << formattedMessage;
+    }
+}
+
+void Logger::fatal(const QString& message)
+{
+    if (s_currentLevel <= LogLevel::FATAL) {
+        QString formattedMessage = formatMessage(LogLevel::FATAL, message);
+        qCritical().noquote() << formattedMessage;
+    }
+}
+
+QString Logger::formatMessage(LogLevel level, const QString& message)
+{
+    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+    QString levelStr;
     
-    // 发送信号
-    emit logMessage(level, message);
-}
-
-QString Logger::formatMessage(LogLevel level, const QString& message) {
-    QString formatted = m_messageFormat;
-    formatted.replace("%timestamp%", getCurrentTimestamp());
-    formatted.replace("%level%", levelToString(level));
-    formatted.replace("%message%", message);
-    return formatted;
-}
-
-QString Logger::levelToString(LogLevel level) {
     switch (level) {
-        case LogLevel::DEBUG:    return "DEBUG";
-        case LogLevel::INFO:     return "INFO";
-        case LogLevel::WARNING:  return "WARNING";
-        case LogLevel::ERROR:    return "ERROR";
-        case LogLevel::CRITICAL: return "CRITICAL";
-        default:                 return "UNKNOWN";
+        case LogLevel::DEBUG:
+            levelStr = "DEBUG";
+            break;
+        case LogLevel::INFO:
+            levelStr = "INFO ";
+            break;
+        case LogLevel::WARN:
+            levelStr = "WARN ";
+            break;
+        case LogLevel::ERROR:
+            levelStr = "ERROR";
+            break;
+        case LogLevel::FATAL:
+            levelStr = "FATAL";
+            break;
     }
+    
+    return QString("[%1] [%2] %3").arg(timestamp, levelStr, message);
 }
 
-QString Logger::getCurrentTimestamp() {
-    return QDateTime::currentDateTime().toString(m_dateFormat);
-}
+} // namespace Fantasy

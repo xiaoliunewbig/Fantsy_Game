@@ -1,4 +1,12 @@
-#pragma once
+/**
+ * @file FileUtils.h
+ * @brief 文件工具
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#ifndef FILEUTILS_H
+#define FILEUTILS_H
 
 #include <QObject>
 #include <QString>
@@ -12,11 +20,24 @@
 #include <QVariantMap>
 #include <QVariantList>
 
+namespace Fantasy {
+
+/**
+ * @brief 文件工具类
+ * 
+ * 提供文件操作相关的工具方法
+ */
 class FileUtils : public QObject {
     Q_OBJECT
     
 public:
     static FileUtils* instance();
+    
+    // 路径相关
+    static QString getApplicationDir();
+    static QString getDataDir();
+    static QString getConfigDir();
+    static QString getLogDir();
     
     // 文件操作
     static bool fileExists(const QString& filePath);
@@ -91,3 +112,7 @@ private:
     static FileUtils* s_instance;
     QString m_tempDirectory;
 };
+
+} // namespace Fantasy
+
+#endif // FILEUTILS_H

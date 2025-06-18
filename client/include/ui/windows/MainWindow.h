@@ -1,100 +1,167 @@
-#pragma once
+/**
+ * @file MainWindow.h
+ * @brief 幻境传说主窗口类
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QVBoxLayout>
 #include <QStackedWidget>
-#include <QPushButton>
-#include <QLabel>
+#include <QMenuBar>
+#include <QStatusBar>
 #include <QTimer>
-#include <QKeyEvent>
-#include <QCloseEvent>
-#include "GameScene.h"
-#include "UIManager.h"
+#include <QSettings>
+#include <memory>
 
 // 前向声明
-class GameEngine;
+class GameScene;
+class MainMenu;
+class PauseMenu;
+class UIManager;
+class GameController;
+class NetworkManager;
 
+namespace Fantasy {
+class GameScene;
+class MainMenu;
+class PauseMenu;
+class UIManager;
+class GameController;
+class NetworkManager;
+
+/**
+ * @brief 游戏状态枚举
+ */
 enum class GameState {
-    MENU,
-    PLAYING,
-    PAUSED,
-    BATTLE,
-    DIALOGUE,
-    INVENTORY
+    MAIN_MENU,      ///< 主菜单
+    PLAYING,        ///< 游戏中
+    PAUSED,         ///< 暂停
+    SETTINGS,       ///< 设置
+    LOADING,        ///< 加载中
+    EXIT            ///< 退出
 };
 
-class MainWindow : public QMainWindow {
+/**
+ * @brief 主窗口类
+ * 
+ * 负责管理整个应用程序的主窗口，包括：
+ * - 窗口布局和UI管理
+ * - 游戏状态切换
+ * - 菜单系统
+ * - 设置管理
+ */
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
-    
+
 public:
-    MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    
-    // 界面切换
+
+    // 游戏状态管理
     void showMainMenu();
     void showGameScene();
     void showPauseMenu();
-    void showSettingsMenu();
-    void showInventory();
-    void showDialogue();
+    void showSettings();
+    void showLoadingScreen();
     
-    // 窗口控制
+    // 窗口管理
     void setFullscreen(bool fullscreen);
-    void setWindowSize(int width, int height);
-    void centerWindow();
+    void toggleFullscreen();
+    void centerOnScreen();
     
-    // 获取器
-    GameScene* getGameScene() const { return m_gameScene; }
-    UIManager* getUIManager() const { return m_uiManager; }
-    GameState getCurrentState() const { return m_currentState; }
-    
-protected:
-    void closeEvent(QCloseEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
-    void resizeEvent(QResizeEvent* event) override;
-    
-private slots:
-    void onGameStateChanged(GameState state);
+    // 设置管理
+    void loadSettings();
+    void saveSettings();
+    void applySettings();
+
+public slots:
+    // 游戏状态变化处理
+    void onGameStateChanged(GameState newState);
     void onNewGameClicked();
     void onLoadGameClicked();
     void onSettingsClicked();
     void onExitClicked();
     void onResumeClicked();
-    void onSaveGameClicked();
-    void onLoadGameFromMenuClicked();
     void onBackToMainMenuClicked();
     
-    // 键盘快捷键处理
-    void onEscapePressed();
-    void onSpacePressed();
-    void onEnterPressed();
+    // 窗口事件处理
+    void onWindowStateChanged(Qt::WindowStates state);
+    void onCloseRequested();
     
+    // 更新处理
+    void update();
+
+signals:
+    // 游戏事件信号
+    void gameStarted();
+    void gamePaused();
+    void gameResumed();
+    void gameExited();
+    void settingsChanged();
+
+protected:
+    // 事件处理
+    void closeEvent(QCloseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+
 private:
+    // UI初始化
     void setupUI();
-    void createMainMenu();
-    void createPauseMenu();
-    void createSettingsMenu();
+    void createMenuBar();
+    void createStatusBar();
+    void createCentralWidget();
     void setupConnections();
-    void applyStyles();
     
+    // 样式设置
+    void applyStylesheet();
+    void loadStylesheet(const QString& filename);
+    
+    // 工具方法
+    void logMessage(const QString& message);
+    void showError(const QString& title, const QString& message);
+
+private:
     // UI组件
-    QStackedWidget* m_stackedWidget;
-    QWidget* m_mainMenu;
-    QWidget* m_pauseMenu;
-    QWidget* m_settingsMenu;
-    GameScene* m_gameScene;
-    UIManager* m_uiManager;
+    QStackedWidget* m_stackedWidget;    ///< 堆叠窗口组件
+    Fantasy::MainMenu* m_mainMenu;               ///< 主菜单
+    Fantasy::GameScene* m_gameScene;             ///< 游戏场景
+    Fantasy::PauseMenu* m_pauseMenu;             ///< 暂停菜单
+    QWidget* m_settingsWidget;          ///< 设置界面
+    QWidget* m_loadingWidget;           ///< 加载界面
+    
+    // 管理器
+    std::unique_ptr<Fantasy::UIManager> m_uiManager;      ///< UI管理器
+    std::unique_ptr<Fantasy::GameController> m_gameController; ///< 游戏控制器
+    std::unique_ptr<Fantasy::NetworkManager> m_networkManager; ///< 网络管理器
     
     // 状态管理
-    GameState m_currentState;
-    GameState m_previousState;
-    
-    // 窗口设置
-    bool m_isFullscreen;
-    int m_windowWidth;
-    int m_windowHeight;
+    GameState m_currentState;           ///< 当前游戏状态
+    GameState m_previousState;          ///< 前一个游戏状态
+    bool m_isFullscreen;                ///< 是否全屏
     
     // 定时器
-    QTimer* m_updateTimer;
+    QTimer* m_updateTimer;              ///< 更新定时器
+    QTimer* m_fpsTimer;                 ///< FPS定时器
+    
+    // 设置
+    QSettings* m_settings;              ///< 设置管理器
+    
+    // 性能监控
+    int m_frameCount;                   ///< 帧数计数
+    double m_lastFpsTime;               ///< 上次FPS计算时间
+    double m_currentFps;                ///< 当前FPS
+    
+    // 窗口属性
+    QSize m_normalSize;                 ///< 正常窗口大小
+    QPoint m_normalPosition;            ///< 正常窗口位置
 };
+
+} // namespace Fantasy
+
+#endif // MAINWINDOW_H

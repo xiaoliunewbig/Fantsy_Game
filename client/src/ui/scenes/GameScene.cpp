@@ -1,7 +1,12 @@
-#include "GameScene.h"
-#include "../core/Character.h"
-#include "../core/GameEngine.h"
-#include "../utils/Logger.h"
+/**
+ * @file GameScene.cpp
+ * @brief 游戏场景实现
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#include "ui/scenes/GameScene.h"
+#include "utils/Logger.h"
 #include <QVBoxLayout>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsTextItem>
@@ -13,6 +18,10 @@
 #include <QScreen>
 #include <QResizeEvent>
 #include <QWheelEvent>
+#include <QPainter>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QTimer>
 
 GameScene::GameScene(QWidget* parent)
     : QWidget(parent)
@@ -25,18 +34,30 @@ GameScene::GameScene(QWidget* parent)
     , m_cameraZoom(1.0f)
     , m_targetCameraPosition(0, 0)
     , m_mousePressed(false)
-    , m_updateTimer(new QTimer(this)) {
+    , m_updateTimer(new QTimer(this))
+    , m_gameTimer(nullptr) {
+    
+    CLIENT_LOG_DEBUG("Creating GameScene");
     
     setupUI();
     setupConnections();
     initializeGraphics();
     
-    Logger::info("GameScene initialized successfully");
+    // 设置窗口属性
+    setFocusPolicy(Qt::StrongFocus);
+    setMouseTracking(true);
+    
+    // 创建游戏定时器
+    m_gameTimer = new QTimer(this);
+    m_gameTimer->setInterval(16); // ~60 FPS
+    connect(m_gameTimer, &QTimer::timeout, this, &GameScene::update);
+    
+    CLIENT_LOG_DEBUG("GameScene created successfully");
 }
 
 GameScene::~GameScene() {
     stopScene();
-    Logger::info("GameScene destroyed");
+    CLIENT_LOG_DEBUG("Destroying GameScene");
 }
 
 void GameScene::setupUI() {
@@ -108,6 +129,7 @@ void GameScene::drawGrid() {
 }
 
 void GameScene::startScene() {
+    CLIENT_LOG_INFO("Starting game scene");
     if (m_isRunning) {
         return;
     }
@@ -116,10 +138,15 @@ void GameScene::startScene() {
     m_updateTimer->start(16); // ~60 FPS
     setInputEnabled(true);
     
-    Logger::info("GameScene started");
+    if (m_gameTimer) {
+        m_gameTimer->start();
+    }
+    
+    CLIENT_LOG_INFO("GameScene started");
 }
 
 void GameScene::pauseScene() {
+    CLIENT_LOG_INFO("Pausing game scene");
     if (!m_isRunning) {
         return;
     }
@@ -128,10 +155,15 @@ void GameScene::pauseScene() {
     m_updateTimer->stop();
     setInputEnabled(false);
     
-    Logger::info("GameScene paused");
+    if (m_gameTimer) {
+        m_gameTimer->stop();
+    }
+    
+    CLIENT_LOG_INFO("GameScene paused");
 }
 
 void GameScene::resumeScene() {
+    CLIENT_LOG_INFO("Resuming game scene");
     if (m_isRunning) {
         return;
     }
@@ -140,13 +172,22 @@ void GameScene::resumeScene() {
     m_updateTimer->start(16);
     setInputEnabled(true);
     
-    Logger::info("GameScene resumed");
+    if (m_gameTimer) {
+        m_gameTimer->start();
+    }
+    
+    CLIENT_LOG_INFO("GameScene resumed");
 }
 
 void GameScene::stopScene() {
+    CLIENT_LOG_INFO("Stopping game scene");
     m_isRunning = false;
     m_updateTimer->stop();
     setInputEnabled(false);
+    
+    if (m_gameTimer) {
+        m_gameTimer->stop();
+    }
     
     // 清理角色
     m_characters.clear();
@@ -155,7 +196,7 @@ void GameScene::stopScene() {
     // 清理特效
     clearEffects();
     
-    Logger::info("GameScene stopped");
+    CLIENT_LOG_INFO("GameScene stopped");
 }
 
 void GameScene::addCharacter(Character* character) {
@@ -184,7 +225,7 @@ void GameScene::addCharacter(Character* character) {
     connect(character, &Character::positionChanged,
             this, &GameScene::onCharacterPositionChanged);
     
-    Logger::info(QString("Character added: %1").arg(character->getName()));
+    CLIENT_LOG_INFO(QString("Character added: %1").arg(character->getName()));
 }
 
 void GameScene::removeCharacter(Character* character) {
@@ -211,7 +252,7 @@ void GameScene::removeCharacter(Character* character) {
     disconnect(character, &Character::positionChanged,
               this, &GameScene::onCharacterPositionChanged);
     
-    Logger::info(QString("Character removed: %1").arg(character->getName()));
+    CLIENT_LOG_INFO(QString("Character removed: %1").arg(character->getName()));
 }
 
 void GameScene::updateCharacterPosition(Character* character, const QVector2D& position) {
@@ -411,6 +452,33 @@ void GameScene::keyPressEvent(QKeyEvent* event) {
     m_keyStates[event->key()] = true;
     emit keyPressed(event->key());
     
+    switch (event->key()) {
+        case Qt::Key_W:
+        case Qt::Key_Up:
+            CLIENT_LOG_DEBUG("Move up");
+            break;
+        case Qt::Key_S:
+        case Qt::Key_Down:
+            CLIENT_LOG_DEBUG("Move down");
+            break;
+        case Qt::Key_A:
+        case Qt::Key_Left:
+            CLIENT_LOG_DEBUG("Move left");
+            break;
+        case Qt::Key_D:
+        case Qt::Key_Right:
+            CLIENT_LOG_DEBUG("Move right");
+            break;
+        case Qt::Key_Space:
+            CLIENT_LOG_DEBUG("Jump/Attack");
+            break;
+        case Qt::Key_Escape:
+            CLIENT_LOG_DEBUG("Pause game");
+            break;
+        default:
+            break;
+    }
+    
     QWidget::keyPressEvent(event);
 }
 
@@ -437,6 +505,8 @@ void GameScene::mousePressEvent(QMouseEvent* event) {
     
     QVector2D worldPos = screenToWorld(event->pos());
     emit sceneClicked(worldPos);
+    
+    CLIENT_LOG_DEBUG("Mouse pressed at (%d, %d)", event->x(), event->y());
     
     QWidget::mousePressEvent(event);
 }
@@ -494,4 +564,16 @@ void GameScene::resizeEvent(QResizeEvent* event) {
         }
         drawGrid();
     }
+}
+
+void GameScene::update() {
+    if (!m_isRunning) {
+        return;
+    }
+    
+    // 更新游戏逻辑
+    // TODO: 实现游戏逻辑更新
+    
+    // 触发重绘
+    update();
 }

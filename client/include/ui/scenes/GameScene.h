@@ -1,4 +1,12 @@
-#pragma once
+/**
+ * @file GameScene.h
+ * @brief 游戏场景
+ * @author [pengchengkang]
+ * @date 2025.06.17
+ */
+
+#ifndef GAMESCENE_H
+#define GAMESCENE_H
 
 #include <QWidget>
 #include <QGraphicsView>
@@ -9,18 +17,32 @@
 #include <QVector2D>
 #include <QList>
 #include <QMap>
+#include <QPainter>
 
 // 前向声明
 class Character;
 class GameEngine;
 class UIManager;
 
+namespace Fantasy {
+
+/**
+ * @brief 游戏场景类
+ * 
+ * 负责渲染游戏世界和角色
+ */
 class GameScene : public QWidget {
     Q_OBJECT
     
 public:
-    GameScene(QWidget* parent = nullptr);
+    explicit GameScene(QWidget* parent = nullptr);
     ~GameScene();
+    
+    // 游戏控制
+    void startGame();
+    void pauseGame();
+    void resumeGame();
+    void stopGame();
     
     // 场景控制
     void startScene();
@@ -60,6 +82,8 @@ signals:
     void keyReleased(int key);
     
 protected:
+    // 事件处理
+    void paintEvent(QPaintEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
@@ -69,6 +93,7 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     
 private slots:
+    void update();
     void updateScene(float deltaTime);
     void onCharacterPositionChanged(Character* character, const QVector2D& position);
     
@@ -104,8 +129,12 @@ private:
     bool m_mousePressed;
     
     // 定时器
-    QTimer* m_updateTimer;
+    QTimer* m_gameTimer;    ///< 游戏更新定时器
     
     // 特效管理
     QList<QGraphicsItem*> m_effects;
 };
+
+} // namespace Fantasy
+
+#endif // GAMESCENE_H
