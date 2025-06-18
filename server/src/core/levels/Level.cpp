@@ -547,21 +547,26 @@ void Level::emitEvent(LevelEventType type, const std::string& name,
 }
 
 // 订阅事件
-void Level::subscribeToEvent(LevelEventType type, EventCallback callback) {
+void Level::subscribeToEvent(LevelEventType type, LevelEventCallback callback) {
+    if (eventCallbacks_.find(type) == eventCallbacks_.end()) {
+        eventCallbacks_[type] = std::vector<LevelEventCallback>();
+    }
     eventCallbacks_[type].push_back(callback);
 }
 
 // 取消订阅事件
-void Level::unsubscribeFromEvent(LevelEventType type, EventCallback callback) {
-    auto& callbacks = eventCallbacks_[type];
-    callbacks.erase(
-        std::remove_if(callbacks.begin(), callbacks.end(),
-            [&callback](const EventCallback& cb) {
-                return cb.target_type() == callback.target_type() && 
-                       cb.target<void(*)(const LevelEvent&)>() == callback.target<void(*)(const LevelEvent&)>();
-            }),
-        callbacks.end()
-    );
+void Level::unsubscribeFromEvent(LevelEventType type, LevelEventCallback callback) {
+    auto it = eventCallbacks_.find(type);
+    if (it != eventCallbacks_.end()) {
+        auto& callbacks = it->second;
+        callbacks.erase(
+            std::remove_if(callbacks.begin(), callbacks.end(),
+                [&callback](const LevelEventCallback& cb) {
+                    return &cb == &callback;
+                }),
+            callbacks.end()
+        );
+    }
 }
 
 // 添加目标
@@ -954,6 +959,7 @@ void Level::onObjectiveFailed(const std::string& objectiveId) {
 }
 
 void Level::onTriggerActivated(const std::string& triggerId) {
+    (void)triggerId; // 避免未使用参数警告
     LEVEL_LOG_DEBUG("触发器激活回调: %s", triggerId.c_str());
 }
 

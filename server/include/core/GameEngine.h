@@ -146,12 +146,12 @@ struct GameStats {
 };
 
 // 事件回调函数类型
-using EventCallback = std::function<void(const GameEvent&)>;
+using GameEventCallback = std::function<void(const GameEvent&)>;
 
 // 基础系统接口类
-class ResourceManager {
+class IResourceManager {
 public:
-    virtual ~ResourceManager() = default;
+    virtual ~IResourceManager() = default;
     virtual bool Init() = 0;
     virtual void shutdown() = 0;
 };
@@ -238,6 +238,9 @@ public:
     GameEngine(const GameEngine&) = delete;
     GameEngine& operator=(const GameEngine&) = delete;
     
+    // 析构函数
+    ~GameEngine();
+    
     // 初始化和清理
     bool Init(const GameConfig& config = GameConfig{});
     void shutdown();
@@ -268,8 +271,8 @@ public:
     // 事件系统
     void emitEvent(const GameEvent& event);
     void emitEvent(GameEventType type, const std::string& name, const GameEventData& data = std::string{});
-    void subscribeToEvent(GameEventType type, EventCallback callback);
-    void unsubscribeFromEvent(GameEventType type, EventCallback callback);
+    void subscribeToEvent(GameEventType type, GameEventCallback callback);
+    void unsubscribeFromEvent(GameEventType type, GameEventCallback callback);
     
     // 数据持久化
     bool saveGame(const std::string& slotName);
@@ -278,7 +281,7 @@ public:
     std::vector<std::string> getSaveSlots() const;
     
     // 系统访问器
-    std::shared_ptr<ResourceManager> getResourceManager() const;
+    std::shared_ptr<IResourceManager> getResourceManager() const;
     std::shared_ptr<GameConfigManager> getConfigManager() const;
     std::shared_ptr<DatabaseManager> getDatabaseManager() const;
     std::shared_ptr<EventSystem> getEventSystem() const;
@@ -314,7 +317,6 @@ public:
 
 private:
     GameEngine();
-    ~GameEngine();
     
     // 内部实现
     class Impl;
@@ -327,6 +329,7 @@ private:
     void processEvents();
     void updateStats();
     void cleanupResources();
+    std::string getEventName(GameEventType type);
     
     // 系统初始化
     bool InitSystems();   //InitSystems

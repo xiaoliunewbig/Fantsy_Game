@@ -2,7 +2,7 @@
  * @file ScriptResource.h
  * @brief 脚本资源类
  * @author [pengchengkang]
- * @date 2025.06.16
+ * @date 2025.06.18
  */
 
 #pragma once
@@ -12,31 +12,15 @@
 #include <memory>
 #include <filesystem>
 #include <functional>
-#include <unordered_map>
-#include <pybind11/pybind11.h>
 
 namespace Fantasy {
 
-namespace py = pybind11;
-
 /**
  * @brief 脚本资源类
- * @details 用于加载和管理Python脚本资源
+ * @details 用于加载和管理脚本资源（支持多种脚本语言）
  */
 class ScriptResource : public IResource {
 public:
-    /**
-     * @brief 脚本类型
-     */
-    enum class ScriptType {
-        QUEST,      ///< 任务脚本
-        DIALOGUE,   ///< 对话脚本
-        EVENT,      ///< 事件脚本
-        AI,         ///< AI脚本
-        SYSTEM,     ///< 系统脚本
-        CUSTOM      ///< 自定义脚本
-    };
-
     /**
      * @brief 构造函数
      * @param path 脚本文件路径
@@ -56,103 +40,21 @@ public:
     bool needsReload() const override;
 
     /**
-     * @brief 获取脚本类型
-     * @return 脚本类型
+     * @brief 获取脚本内容
+     * @return 脚本文件内容
      */
-    ScriptType getScriptType() const;
+    const std::string& getScriptContent() const;
 
-    /**
-     * @brief 获取脚本模块
-     * @return Python模块对象
-     */
-    py::module_ getModule() const;
-
-    /**
-     * @brief 调用脚本函数
-     * @tparam R 返回值类型
-     * @tparam Args 参数类型
-     * @param functionName 函数名
-     * @param args 函数参数
-     * @return 函数返回值
-     */
-    template<typename R = void, typename... Args>
-    R callFunction(const std::string& functionName, Args&&... args) const {
-        try {
-            if (!module_) {
-                throw std::runtime_error("Script module not loaded");
-            }
-            return module_.attr(functionName.c_str())(std::forward<Args>(args)...).cast<R>();
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to call script function: " + std::string(e.what()));
-        }
-    }
-
-    /**
-     * @brief 获取脚本变量
-     * @tparam T 变量类型
-     * @param name 变量名
-     * @return 变量值
-     */
-    template<typename T>
-    T getVariable(const std::string& name) const {
-        try {
-            if (!module_) {
-                throw std::runtime_error("Script module not loaded");
-            }
-            return module_.attr(name.c_str()).cast<T>();
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to get script variable: " + std::string(e.what()));
-        }
-    }
-
-    /**
-     * @brief 设置脚本变量
-     * @tparam T 变量类型
-     * @param name 变量名
-     * @param value 变量值
-     */
-    template<typename T>
-    void setVariable(const std::string& name, const T& value) {
-        try {
-            if (!module_) {
-                throw std::runtime_error("Script module not loaded");
-            }
-            module_.attr(name.c_str()) = value;
-        } catch (const std::exception& e) {
-            throw std::runtime_error("Failed to set script variable: " + std::string(e.what()));
-        }
-    }
-
-    /**
-     * @brief 检查脚本是否包含指定函数
-     * @param functionName 函数名
-     * @return 是否包含
-     */
-    bool hasFunction(const std::string& functionName) const;
-
-    /**
-     * @brief 检查脚本是否包含指定变量
-     * @param name 变量名
-     * @return 是否包含
-     */
-    bool hasVariable(const std::string& name) const;
-
-    /**
-     * @brief 获取脚本错误信息
-     * @return 错误信息
-     */
-    const std::string& getError() const;
+    // TODO: 实现脚本执行功能
+    // bool execute(const std::string& functionName, const std::vector<std::string>& args);
 
 private:
-    std::string id_;                              ///< 资源ID
+    std::string resourceId_;                      ///< 资源ID
     std::filesystem::path path_;                  ///< 资源路径
     ResourceState state_;                         ///< 资源状态
-    std::filesystem::file_time_type lastModified_; ///< 最后修改时间
+    std::filesystem::file_time_type lastModifiedTime_; ///< 最后修改时间
     std::uintmax_t size_;                         ///< 资源大小
-
-    ScriptType scriptType_;                       ///< 脚本类型
-    py::module_ module_;                          ///< Python模块
-    std::string error_;                           ///< 错误信息
+    std::string scriptContent_;                   ///< 脚本内容
 };
 
 /**
@@ -162,9 +64,8 @@ class ScriptResourceLoader : public IResourceLoader {
 public:
     /**
      * @brief 构造函数
-     * @param pythonPath Python模块搜索路径
      */
-    explicit ScriptResourceLoader(const std::filesystem::path& pythonPath = "");
+    ScriptResourceLoader() = default;
 
     bool supportsType(ResourceType type) const override;
     std::shared_ptr<IResource> load(const std::filesystem::path& path,
@@ -172,9 +73,6 @@ public:
     void loadAsync(const std::filesystem::path& path,
                   ResourceType type,
                   std::function<void(std::shared_ptr<IResource>)> callback) override;
-
-private:
-    std::filesystem::path pythonPath_;            ///< Python模块搜索路径
 };
 
 } // namespace Fantasy

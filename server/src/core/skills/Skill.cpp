@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/core/skills/Skill.h"
-#include "include/core/characters/Character.h"
+#include "core/skills/Skill.h"
+#include "core/characters/Character.h"
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -284,6 +284,9 @@ bool Skill::checkLevelRequirement(int level) const {
 
 // 检查技能需求
 bool Skill::checkSkillRequirement(const std::string& skillId, int level) const {
+    (void)skillId; // 避免未使用参数警告
+    (void)level;   // 避免未使用参数警告
+    
     // 这里需要检查角色是否拥有指定技能和等级
     // 暂时返回true，实际实现需要访问角色技能列表
     return true;
@@ -291,6 +294,9 @@ bool Skill::checkSkillRequirement(const std::string& skillId, int level) const {
 
 // 检查属性需求
 bool Skill::checkAttributeRequirement(const std::string& attribute, int value) const {
+    (void)attribute; // 避免未使用参数警告
+    (void)value;     // 避免未使用参数警告
+    
     // 这里需要检查角色属性
     // 暂时返回true，实际实现需要访问角色属性
     return true;
@@ -345,22 +351,26 @@ void Skill::emitEvent(SkillEventType type, const std::string& name, const SkillE
 }
 
 // 订阅事件
-void Skill::subscribeToEvent(SkillEventType type, EventCallback callback) {
+void Skill::subscribeToEvent(SkillEventType type, SkillEventCallback callback) {
+    if (eventCallbacks_.find(type) == eventCallbacks_.end()) {
+        eventCallbacks_[type] = std::vector<SkillEventCallback>();
+    }
     eventCallbacks_[type].push_back(callback);
 }
 
 // 取消订阅事件
-void Skill::unsubscribeFromEvent(SkillEventType type, EventCallback callback) {
-    auto& callbacks = eventCallbacks_[type];
-    callbacks.erase(
-        std::remove_if(callbacks.begin(), callbacks.end(),
-            [&callback](const EventCallback& cb) {
-                // 由于std::function没有operator==，我们使用target_type()和target()来比较
-                return cb.target_type() == callback.target_type() && 
-                       cb.target<void(*)(const SkillEvent&)>() == callback.target<void(*)(const SkillEvent&)>();
-            }),
-        callbacks.end()
-    );
+void Skill::unsubscribeFromEvent(SkillEventType type, SkillEventCallback callback) {
+    auto it = eventCallbacks_.find(type);
+    if (it != eventCallbacks_.end()) {
+        auto& callbacks = it->second;
+        callbacks.erase(
+            std::remove_if(callbacks.begin(), callbacks.end(),
+                [&callback](const SkillEventCallback& cb) {
+                    return &cb == &callback;
+                }),
+            callbacks.end()
+        );
+    }
 }
 
 // 检查是否可以学习
@@ -600,15 +610,21 @@ bool Skill::applyEffect(const SkillEffect& effect, std::shared_ptr<Character> ca
     }
 }
 
-int Skill::calculateDamage(const SkillEffect& effect, std::shared_ptr<Character> caster, 
+int Skill::calculateDamage(const SkillEffect& effect, std::shared_ptr<Character> caster,
                           std::shared_ptr<Character> target) {
+    (void)caster; // 避免未使用参数警告
+    (void)target; // 避免未使用参数警告
+    
     float baseDamage = calculateEffectValue(effect, level_);
     // 这里应该包含更复杂的伤害计算逻辑
     return static_cast<int>(baseDamage);
 }
 
-int Skill::calculateHealAmount(const SkillEffect& effect, std::shared_ptr<Character> caster, 
+int Skill::calculateHealAmount(const SkillEffect& effect, std::shared_ptr<Character> caster,
                               std::shared_ptr<Character> target) {
+    (void)caster; // 避免未使用参数警告
+    (void)target; // 避免未使用参数警告
+    
     float baseHeal = calculateEffectValue(effect, level_);
     // 这里应该包含更复杂的治疗计算逻辑
     return static_cast<int>(baseHeal);
@@ -618,6 +634,7 @@ bool Skill::applyDamageEffect(const SkillEffect& effect, std::shared_ptr<Charact
                              const std::vector<std::shared_ptr<Character>>& targets) {
     for (const auto& target : targets) {
         int damage = calculateDamage(effect, caster, target);
+        (void)damage; // 避免未使用变量警告
         // 这里应该调用目标的受伤方法
         // target->takeDamage(damage);
         SKILL_LOG_INFO("对目标造成 %d 点伤害", damage);
@@ -656,6 +673,10 @@ bool Skill::applyDebuffEffect(const SkillEffect& effect, std::shared_ptr<Charact
 
 bool Skill::applyTeleportEffect(const SkillEffect& effect, std::shared_ptr<Character> caster, 
                                const std::vector<std::shared_ptr<Character>>& targets) {
+    (void)effect;   // 避免未使用参数警告
+    (void)caster;   // 避免未使用参数警告
+    (void)targets;  // 避免未使用参数警告
+    
     // 这里应该实现传送效果
     SKILL_LOG_INFO("应用传送效果");
     return true;

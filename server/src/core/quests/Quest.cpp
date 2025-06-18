@@ -357,17 +357,26 @@ void Quest::emitEvent(QuestEventType type, const std::string& name, const QuestE
 }
 
 // 订阅事件
-void Quest::subscribeToEvent(QuestEventType type, EventCallback callback) {
+void Quest::subscribeToEvent(QuestEventType type, QuestEventCallback callback) {
+    if (eventCallbacks_.find(type) == eventCallbacks_.end()) {
+        eventCallbacks_[type] = std::vector<QuestEventCallback>();
+    }
     eventCallbacks_[type].push_back(callback);
 }
 
 // 取消订阅事件
-void Quest::unsubscribeFromEvent(QuestEventType type, EventCallback callback) {
-    auto& callbacks = eventCallbacks_[type];
-    callbacks.erase(
-        std::remove(callbacks.begin(), callbacks.end(), callback),
-        callbacks.end()
-    );
+void Quest::unsubscribeFromEvent(QuestEventType type, QuestEventCallback callback) {
+    auto it = eventCallbacks_.find(type);
+    if (it != eventCallbacks_.end()) {
+        auto& callbacks = it->second;
+        callbacks.erase(
+            std::remove_if(callbacks.begin(), callbacks.end(),
+                [&callback](const QuestEventCallback& cb) {
+                    return &cb == &callback;
+                }),
+            callbacks.end()
+        );
+    }
 }
 
 // 事件回调方法
@@ -585,6 +594,8 @@ bool Quest::giveTitleReward(const QuestReward& reward) {
     if (!character_) {
         return false;
     }
+    
+    (void)reward; // 避免未使用参数警告
     
     // 这里需要调用角色的称号添加方法
     // character_->addTitle(reward.targetId);

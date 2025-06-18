@@ -140,7 +140,7 @@ struct QuestEvent {
 };
 
 // 事件回调函数类型
-using EventCallback = std::function<void(const QuestEvent&)>;
+using QuestEventCallback = std::function<void(const QuestEvent&)>;
 
 // 任务配置结构
 struct QuestConfig {
@@ -238,8 +238,8 @@ public:
     virtual void emitEvent(const QuestEvent& event);
     virtual void emitEvent(QuestEventType type, const std::string& name, 
                           const QuestEventData& data = QuestEventData{});
-    virtual void subscribeToEvent(QuestEventType type, EventCallback callback);
-    virtual void unsubscribeFromEvent(QuestEventType type, EventCallback callback);
+    virtual void subscribeToEvent(QuestEventType type, QuestEventCallback callback);
+    virtual void unsubscribeFromEvent(QuestEventType type, QuestEventCallback callback);
     
     // 状态检查
     virtual bool isStarted() const { return state_ == QuestState::ACTIVE; }
@@ -341,7 +341,7 @@ private:
     
     // 事件系统
     std::vector<QuestEvent> eventQueue_;
-    std::unordered_map<QuestEventType, std::vector<EventCallback>> eventCallbacks_;
+    std::unordered_map<QuestEventType, std::vector<QuestEventCallback>> eventCallbacks_;
 };
 
 } // namespace Fantasy 

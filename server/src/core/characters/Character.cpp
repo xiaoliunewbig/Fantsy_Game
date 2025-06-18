@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/core/characters/Character.h"
-#include "include/utils/resources/ResourceLogger.h"
+#include "core/characters/Character.h"
+#include "utils/resources/ResourceLogger.h"
 #include <algorithm>
 #include <cmath>
 #include <sstream>

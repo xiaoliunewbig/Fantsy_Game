@@ -6,10 +6,9 @@
  * @date 2025.06.16
  */
 
-#pragma one
-#include "include/utils/LogSys/ConsoleSink.h"
+#include "utils/LogSys/ConsoleSink.h"
 #include <iostream>
-#include "include/utils/LogSys/LogLevel.h"
+#include "utils/LogSys/LogLevel.h"
 
 namespace Fantasy {
 

@@ -1,8 +1,9 @@
 /**
  * @file main.cpp
  * @brief Fantasy Legend 服务器主程序
+ * @details 服务器启动、初始化和主循环
  * @author [pengchengkang]
- * @date 2025.06.17
+ * @date 2025.06.18
  */
 
 #include <iostream>
@@ -10,35 +11,51 @@
 #include <thread>
 #include <chrono>
 #include <csignal>
+#include <filesystem>
 
-// 包含核心系统头文件
-#include "include/utils/resources/ResourceSystem.h"
-#include "include/utils/config/ConfigManager.h"
-#include "include/utils/resources/ResourceLogger.h"
+// 核心系统
+#include "core/GameEngine.h"
+#include "utils/config/ConfigManager.h"
+#include "utils/resources/ResourceSystem.h"
+#include "utils/LogSys/Logger.h"
+#include "utils/LogSys/ConsoleSink.h"
+#include "utils/LogSys/FileSink.h"
 
-// 全局变量用于信号处理
-std::atomic<bool> g_running{true};
+// 全局变量
+static volatile bool g_running = true;
+static std::unique_ptr<Fantasy::GameEngine> g_gameEngine;
+static Fantasy::ConfigManager& g_configManager = Fantasy::ConfigManager::getInstance();
+static Fantasy::ResourceSystem& g_resourceSystem = Fantasy::ResourceSystem::getInstance();
 
 // 信号处理函数
 void signalHandler(int signal) {
-    std::cout << "\n收到信号 " << signal << "，正在关闭服务器..." << std::endl;
+    (void)signal; // 避免未使用参数警告
     g_running = false;
+    std::cout << "\n收到退出信号，正在关闭服务器..." << std::endl;
 }
 
 // 初始化日志系统
 bool initializeLogging() {
     try {
-        auto& logger = Fantasy::ResourceLogger::getInstance();
-        if (!logger.initialize("logs/server.log")) {
-            std::cerr << "Failed to initialize logging system" << std::endl;
-            return false;
-        }
+        // 创建日志目录
+        std::filesystem::create_directories("logs");
         
-        LOG_INFO("=== Fantasy Legend 服务器启动 ===");
-        LOG_INFO("日志系统初始化成功");
+        // 初始化日志系统
+        auto& logger = Fantasy::Logger::getInstance();
+        logger.setLevel(Fantasy::LogLevel::INFO);
+        
+        // 添加控制台输出器
+        auto consoleSink = std::make_shared<Fantasy::ConsoleSink>(false, true);
+        logger.addSink(consoleSink);
+        
+        // 添加文件输出器
+        auto fileSink = std::make_shared<Fantasy::FileSink>("logs", Fantasy::LogType::SYSTEM);
+        logger.addSink(fileSink);
+        
+        FANTASY_LOG_INFO("=== Fantasy Legend 服务器启动 ===");
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Logging initialization error: " << e.what() << std::endl;
+        std::cerr << "日志系统初始化失败: " << e.what() << std::endl;
         return false;
     }
 }
@@ -46,43 +63,35 @@ bool initializeLogging() {
 // 初始化配置管理器
 bool initializeConfigManager() {
     try {
-        auto& configManager = Fantasy::ConfigManager::getInstance();
-        if (!configManager.initialize("config")) {
-            LOG_ERROR("Failed to initialize config manager");
+        if (!g_configManager.initialize()) {
+            FANTASY_LOG_ERROR("Failed to initialize config manager");
             return false;
         }
         
         // 设置默认配置
-        Fantasy::GameConfig gameConfig;
+        Fantasy::AppGameConfig gameConfig;
         gameConfig.version = "1.0.0";
-        gameConfig.language = "zh_CN";
+        gameConfig.language = "zh-CN";
         gameConfig.fullscreen = false;
-        gameConfig.resolution.width = 1920;
-        gameConfig.resolution.height = 1080;
-        gameConfig.volume.master = 100;
-        gameConfig.volume.music = 80;
-        gameConfig.volume.sfx = 90;
-        gameConfig.volume.voice = 85;
-        gameConfig.graphics.quality = "high";
-        gameConfig.graphics.shadows = true;
-        gameConfig.graphics.antialiasing = true;
-        gameConfig.graphics.vsync = true;
+        gameConfig.resolution = {1920, 1080};
+        gameConfig.volume = {100, 80, 90, 85};  // master, music, sfx, voice
+        gameConfig.graphics = {"high", true, true, true};  // quality, shadows, antialiasing, vsync
         
-        configManager.setGameConfig(gameConfig);
+        g_configManager.setGameConfig(gameConfig);
         
         Fantasy::SystemConfig systemConfig;
         systemConfig.autoSave = true;
-        systemConfig.autoSaveInterval = 300;
+        systemConfig.autoSaveInterval = 300; // 5分钟
         systemConfig.maxSaveSlots = 10;
-        systemConfig.logLevel = "info";
+        systemConfig.logLevel = "INFO";
         systemConfig.debugMode = false;
         
-        configManager.setSystemConfig(systemConfig);
+        g_configManager.setSystemConfig(systemConfig);
         
-        LOG_INFO("配置管理器初始化成功");
+        FANTASY_LOG_INFO("配置管理器初始化成功");
         return true;
     } catch (const std::exception& e) {
-        LOG_ERROR("Config manager initialization error: {}", e.what());
+        FANTASY_LOG_ERROR("Config manager initialization error: {}", e.what());
         return false;
     }
 }
@@ -90,30 +99,24 @@ bool initializeConfigManager() {
 // 初始化资源管理系统
 bool initializeResourceSystem() {
     try {
-        auto& resourceSystem = Fantasy::ResourceSystem::getInstance();
-        
         Fantasy::ResourceSystemConfig config;
         config.resourceRootDir = "resources";
-        config.maxCacheSize = 1024 * 1024 * 100; // 100MB
+        config.maxCacheSize = 100 * 1024 * 1024; // 100MB
+        config.maxLoadingThreads = 4;
         config.enableLogging = true;
         config.enablePerformanceMonitoring = true;
-        config.enableCompression = true;
-        config.enableVersionControl = true;
-        config.enablePackaging = true;
-        config.enablePreloading = true;
-        config.threadCount = 4;
-        config.compressionLevel = 6;
-        config.preloadPriority = Fantasy::PreloadPriority::HIGH;
+        config.enableCompression = false;  // TODO: 实现压缩功能
+        config.enablePreloading = false;   // TODO: 实现预加载功能
         
-        if (!resourceSystem.initialize(config)) {
-            LOG_ERROR("Failed to initialize resource system");
+        if (!g_resourceSystem.initialize(config)) {
+            FANTASY_LOG_ERROR("Failed to initialize resource system");
             return false;
         }
         
-        LOG_INFO("资源管理系统初始化成功");
+        FANTASY_LOG_INFO("资源管理系统初始化成功");
         return true;
     } catch (const std::exception& e) {
-        LOG_ERROR("Resource system initialization error: {}", e.what());
+        FANTASY_LOG_ERROR("Resource system initialization error: {}", e.what());
         return false;
     }
 }
@@ -121,164 +124,118 @@ bool initializeResourceSystem() {
 // 加载游戏资源
 void loadGameResources() {
     try {
-        auto& resourceSystem = Fantasy::ResourceSystem::getInstance();
-        
-        LOG_INFO("开始加载游戏资源...");
+        FANTASY_LOG_INFO("开始加载游戏资源...");
         
         // 加载配置文件
-        auto configResource = resourceSystem.getResourceManager().load("config/game.cfg", Fantasy::ResourceType::CONFIG);
-        if (configResource) {
-            LOG_INFO("游戏配置文件加载成功");
-        }
+        g_resourceSystem.loadResource("config/game.json", Fantasy::ResourceType::CONFIG);
+        g_resourceSystem.loadResource("config/characters.json", Fantasy::ResourceType::CONFIG);
+        g_resourceSystem.loadResource("config/levels.json", Fantasy::ResourceType::CONFIG);
         
         // 加载地图资源
-        auto mapResource = resourceSystem.getResourceManager().load("maps/level1.map", Fantasy::ResourceType::MAP);
-        if (mapResource) {
-            LOG_INFO("地图资源加载成功");
-        }
+        g_resourceSystem.loadResource("maps/village.tmx", Fantasy::ResourceType::MAP);
+        g_resourceSystem.loadResource("maps/forest.tmx", Fantasy::ResourceType::MAP);
+        g_resourceSystem.loadResource("maps/dungeon.tmx", Fantasy::ResourceType::MAP);
         
-        // 加载脚本资源
-        auto scriptResource = resourceSystem.getResourceManager().load("scripts/main.lua", Fantasy::ResourceType::SCRIPT);
-        if (scriptResource) {
-            LOG_INFO("脚本资源加载成功");
-        }
+        // 加载纹理资源
+        g_resourceSystem.loadResource("textures/characters.png", Fantasy::ResourceType::TEXTURE);
+        g_resourceSystem.loadResource("textures/ui.png", Fantasy::ResourceType::TEXTURE);
+        g_resourceSystem.loadResource("textures/tiles.png", Fantasy::ResourceType::TEXTURE);
         
-        // 异步加载纹理资源
-        resourceSystem.getResourceLoader().loadAsync("textures/player.png", Fantasy::ResourceType::TEXTURE, 
-            [](const std::shared_ptr<Fantasy::Resource>& resource) {
-                if (resource) {
-                    LOG_INFO("纹理资源异步加载成功: {}", resource->getPath());
-                } else {
-                    LOG_ERROR("纹理资源异步加载失败");
-                }
-            });
+        // 加载音频资源
+        g_resourceSystem.loadResource("audio/background.ogg", Fantasy::ResourceType::MUSIC);
+        g_resourceSystem.loadResource("audio/effects.ogg", Fantasy::ResourceType::SOUND);
         
-        // 异步加载音频资源
-        resourceSystem.getResourceLoader().loadAsync("audio/background.mp3", Fantasy::ResourceType::MUSIC,
-            [](const std::shared_ptr<Fantasy::Resource>& resource) {
-                if (resource) {
-                    LOG_INFO("音频资源异步加载成功: {}", resource->getPath());
-                } else {
-                    LOG_ERROR("音频资源异步加载失败");
-                }
-            });
-        
-        LOG_INFO("游戏资源加载完成");
-        
+        FANTASY_LOG_INFO("游戏资源加载完成");
     } catch (const std::exception& e) {
-        LOG_ERROR("Resource loading error: {}", e.what());
+        FANTASY_LOG_ERROR("Resource loading error: {}", e.what());
     }
 }
 
 // 创建游戏配置示例
 void createGameConfigs() {
     try {
-        auto& configManager = Fantasy::ConfigManager::getInstance();
+        FANTASY_LOG_INFO("创建游戏配置示例...");
         
-        LOG_INFO("创建游戏配置示例...");
+        // 创建游戏配置
+        Fantasy::AppGameConfig gameConfig;
+        gameConfig.version = "1.0.0";
+        gameConfig.language = "zh-CN";
+        gameConfig.fullscreen = false;
+        gameConfig.resolution = {1920, 1080};
+        gameConfig.volume = {100, 80, 90, 85};  // 使用整数而不是浮点数
+        gameConfig.graphics = {"high", true, true, true};  // 使用正确的结构初始化
         
-        // 创建角色配置
-        auto characterConfig = configManager.generateCharacterConfig("warrior", 10);
-        characterConfig["name"] = "战士";
-        characterConfig["skills"] = std::vector<std::string>{"slash", "shield_bash", "charge"};
-        configManager.saveCharacterConfig("warrior", 10, characterConfig);
+        g_configManager.setGameConfig(gameConfig);
         
-        // 创建关卡配置
-        auto levelConfig = configManager.generateLevelConfig(1, 1.0f);
-        levelConfig["name"] = "新手村";
-        levelConfig["enemies"] = std::vector<std::string>{"goblin", "wolf"};
-        levelConfig["rewards"] = std::vector<std::string>{"gold", "experience"};
-        configManager.saveLevelConfig(1, levelConfig);
+        // 创建系统配置
+        Fantasy::SystemConfig systemConfig;
+        systemConfig.autoSave = true;
+        systemConfig.autoSaveInterval = 300;
+        systemConfig.maxSaveSlots = 10;
+        systemConfig.logLevel = "INFO";
+        systemConfig.debugMode = false;
         
-        // 创建物品配置
-        auto itemConfig = configManager.generateItemConfig("sword", 5);
-        itemConfig["name"] = "精钢剑";
-        itemConfig["rarity"] = "rare";
-        itemConfig["effects"] = std::vector<std::string>{"damage_boost", "durability"};
-        configManager.saveItemConfig("sword_5", itemConfig);
+        g_configManager.setSystemConfig(systemConfig);
         
-        // 创建技能配置
-        auto skillConfig = configManager.generateSkillConfig("fireball", 3);
-        skillConfig["name"] = "火球术";
-        skillConfig["type"] = "magic";
-        skillConfig["effects"] = std::vector<std::string>{"burn", "area_damage"};
-        configManager.saveSkillConfig("fireball_3", skillConfig);
+        // 保存配置到文件
+        g_configManager.saveConfig("game", Fantasy::ConfigLevel::APPLICATION);
+        g_configManager.saveConfig("system", Fantasy::ConfigLevel::SYSTEM);
         
-        // 创建任务配置
-        std::unordered_map<std::string, Fantasy::ConfigValue> questConfig;
-        questConfig["id"] = "quest_001";
-        questConfig["name"] = "消灭哥布林";
-        questConfig["description"] = "消灭10只哥布林";
-        questConfig["type"] = "kill";
-        questConfig["target"] = "goblin";
-        questConfig["count"] = 10;
-        questConfig["reward_gold"] = 100;
-        questConfig["reward_exp"] = 50;
-        configManager.saveQuestConfig("quest_001", questConfig);
-        
-        LOG_INFO("游戏配置示例创建完成");
+        FANTASY_LOG_INFO("游戏配置创建完成");
         
     } catch (const std::exception& e) {
-        LOG_ERROR("Game config creation error: {}", e.what());
+        FANTASY_LOG_ERROR("Game config creation error: {}", e.what());
     }
 }
 
 // 显示系统状态
 void displaySystemStatus() {
     try {
-        auto& resourceSystem = Fantasy::ResourceSystem::getInstance();
-        auto& configManager = Fantasy::ConfigManager::getInstance();
-        
-        LOG_INFO("=== 系统状态 ===");
+        FANTASY_LOG_INFO("=== 系统状态 ===");
         
         // 资源系统状态
-        auto resourceStats = resourceSystem.getResourceManager().getStats();
-        LOG_INFO("资源管理器状态:");
-        LOG_INFO("  缓存大小: {} bytes", resourceStats.cacheSize);
-        LOG_INFO("  缓存命中率: {:.2f}%", resourceStats.cacheHitRate * 100);
-        LOG_INFO("  加载的资源数量: {}", resourceStats.loadedResources);
-        LOG_INFO("  总加载时间: {} ms", resourceStats.totalLoadTime);
-        
-        auto loaderStats = resourceSystem.getResourceLoader().getStats();
-        LOG_INFO("资源加载器状态:");
-        LOG_INFO("  队列大小: {}", loaderStats.queueSize);
-        LOG_INFO("  活跃线程数: {}", loaderStats.activeThreads);
-        LOG_INFO("  总加载任务: {}", loaderStats.totalTasks);
-        LOG_INFO("  成功加载: {}", loaderStats.successfulTasks);
+        auto resourceStats = g_resourceSystem.getStats();
+        FANTASY_LOG_INFO("资源系统:");
+        FANTASY_LOG_INFO("  总资源数: {}", resourceStats.totalResources);
+        FANTASY_LOG_INFO("  已加载资源: {}", resourceStats.loadedResources);
+        FANTASY_LOG_INFO("  缓存资源: {}", resourceStats.cachedResources);
+        FANTASY_LOG_INFO("  内存使用: {} bytes", resourceStats.totalMemoryUsage);
+        FANTASY_LOG_INFO("  缓存命中率: {:.2f}%", resourceStats.cacheHitRate * 100);
         
         // 配置管理器状态
-        auto configStats = configManager.getStats();
-        LOG_INFO("配置管理器状态:");
-        LOG_INFO("  已加载配置: {}", configStats.loadedConfigs);
-        LOG_INFO("  已保存配置: {}", configStats.savedConfigs);
-        LOG_INFO("  配置错误: {}", configStats.configErrors);
+        auto configStats = g_configManager.getStats();
+        FANTASY_LOG_INFO("配置管理器:");
+        FANTASY_LOG_INFO("  总配置数: {}", configStats.totalConfigs);
+        FANTASY_LOG_INFO("  已加载配置: {}", configStats.loadedConfigs);
+        FANTASY_LOG_INFO("  已修改配置: {}", configStats.modifiedConfigs);
+        FANTASY_LOG_INFO("  监听器数量: {}", configStats.listenersCount);
         
         // 游戏配置
-        auto gameConfig = configManager.getGameConfig();
-        LOG_INFO("游戏配置:");
-        LOG_INFO("  版本: {}", gameConfig.version);
-        LOG_INFO("  语言: {}", gameConfig.language);
-        LOG_INFO("  分辨率: {}x{}", gameConfig.resolution.width, gameConfig.resolution.height);
-        LOG_INFO("  音量: 主音量={}, 音乐={}, 音效={}, 语音={}", 
+        auto gameConfig = g_configManager.getGameConfig();
+        FANTASY_LOG_INFO("游戏配置:");
+        FANTASY_LOG_INFO("  版本: {}", gameConfig.version);
+        FANTASY_LOG_INFO("  语言: {}", gameConfig.language);
+        FANTASY_LOG_INFO("  分辨率: {}x{}", gameConfig.resolution.width, gameConfig.resolution.height);
+        FANTASY_LOG_INFO("  音量: 主音量={}, 音乐={}, 音效={}, 语音={}", 
                 gameConfig.volume.master, gameConfig.volume.music, 
                 gameConfig.volume.sfx, gameConfig.volume.voice);
         
-        auto systemConfig = configManager.getSystemConfig();
-        LOG_INFO("系统配置:");
-        LOG_INFO("  自动保存: {}", systemConfig.autoSave ? "开启" : "关闭");
-        LOG_INFO("  自动保存间隔: {} 秒", systemConfig.autoSaveInterval);
-        LOG_INFO("  最大存档槽位: {}", systemConfig.maxSaveSlots);
-        LOG_INFO("  日志级别: {}", systemConfig.logLevel);
-        LOG_INFO("  调试模式: {}", systemConfig.debugMode ? "开启" : "关闭");
+        auto systemConfig = g_configManager.getSystemConfig();
+        FANTASY_LOG_INFO("系统配置:");
+        FANTASY_LOG_INFO("  自动保存: {}", systemConfig.autoSave ? "开启" : "关闭");
+        FANTASY_LOG_INFO("  自动保存间隔: {} 秒", systemConfig.autoSaveInterval);
+        FANTASY_LOG_INFO("  最大存档槽位: {}", systemConfig.maxSaveSlots);
+        FANTASY_LOG_INFO("  日志级别: {}", systemConfig.logLevel);
+        FANTASY_LOG_INFO("  调试模式: {}", systemConfig.debugMode ? "开启" : "关闭");
         
     } catch (const std::exception& e) {
-        LOG_ERROR("Status display error: {}", e.what());
+        FANTASY_LOG_ERROR("Status display error: {}", e.what());
     }
 }
 
 // 主服务器循环
 void serverLoop() {
-    LOG_INFO("服务器主循环启动");
+    FANTASY_LOG_INFO("服务器主循环启动");
     
     auto lastStatusTime = std::chrono::steady_clock::now();
     auto lastSaveTime = std::chrono::steady_clock::now();
@@ -288,32 +245,26 @@ void serverLoop() {
             auto now = std::chrono::steady_clock::now();
             
             // 每30秒显示一次状态
-            if (std::chrono::duration_cast<std::chrono::seconds>(now - lastStatusTime).count() >= 30) {
+            if (now - lastStatusTime >= std::chrono::seconds(30)) {
                 displaySystemStatus();
                 lastStatusTime = now;
             }
             
-            // 每5分钟自动保存一次
-            if (std::chrono::duration_cast<std::chrono::minutes>(now - lastSaveTime).count() >= 5) {
-                auto& configManager = Fantasy::ConfigManager::getInstance();
-                configManager.saveConfig("game", Fantasy::ConfigManager::ConfigLevel::GAME);
-                configManager.saveConfig("system", Fantasy::ConfigManager::ConfigLevel::SYSTEM);
-                LOG_INFO("自动保存完成");
+            // 每5分钟自动保存
+            if (now - lastSaveTime >= std::chrono::minutes(5)) {
+                g_configManager.saveConfig("game", Fantasy::ConfigLevel::APPLICATION);
+                g_configManager.saveConfig("system", Fantasy::ConfigLevel::SYSTEM);
                 lastSaveTime = now;
             }
             
-            // 处理资源系统任务
-            auto& resourceSystem = Fantasy::ResourceSystem::getInstance();
-            resourceSystem.getResourceLoader().waitForAll();
-            
-            // 清理未使用的资源
-            resourceSystem.getResourceManager().cleanup();
+            // 处理资源系统更新 - 移除不存在的update方法调用
+            // g_resourceSystem.update();
             
             // 短暂休眠
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             
         } catch (const std::exception& e) {
-            LOG_ERROR("Server loop error: {}", e.what());
+            FANTASY_LOG_ERROR("Server loop error: {}", e.what());
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
@@ -322,26 +273,30 @@ void serverLoop() {
 // 清理资源
 void cleanup() {
     try {
-        LOG_INFO("开始清理资源...");
+        FANTASY_LOG_INFO("开始清理资源...");
         
-        // 关闭资源管理系统
-        auto& resourceSystem = Fantasy::ResourceSystem::getInstance();
-        resourceSystem.shutdown();
+        // 保存配置
+        g_configManager.saveConfig("game", Fantasy::ConfigLevel::APPLICATION);
+        g_configManager.saveConfig("system", Fantasy::ConfigLevel::SYSTEM);
         
-        // 关闭配置管理器
-        auto& configManager = Fantasy::ConfigManager::getInstance();
-        configManager.shutdown();
+        // 清理资源系统
+        g_resourceSystem.shutdown();
         
-        LOG_INFO("资源清理完成");
-        LOG_INFO("=== Fantasy Legend 服务器关闭 ===");
+        // 清理游戏引擎
+        if (g_gameEngine) {
+            g_gameEngine->shutdown();
+        }
+        
+        FANTASY_LOG_INFO("资源清理完成");
         
     } catch (const std::exception& e) {
-        std::cerr << "Cleanup error: " << e.what() << std::endl;
+        std::cerr << "清理过程中发生错误: " << e.what() << std::endl;
     }
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "Fantasy Legend 服务器启动中..." << std::endl;
+    (void)argc; // 避免未使用参数警告
+    (void)argv; // 避免未使用参数警告
     
     // 设置信号处理
     signal(SIGINT, signalHandler);
@@ -356,21 +311,21 @@ int main(int argc, char* argv[]) {
         
         // 初始化配置管理器
         if (!initializeConfigManager()) {
-            LOG_ERROR("配置管理器初始化失败");
+            FANTASY_LOG_ERROR("配置管理器初始化失败");
             return 1;
         }
         
         // 初始化资源管理系统
         if (!initializeResourceSystem()) {
-            LOG_ERROR("资源管理系统初始化失败");
+            FANTASY_LOG_ERROR("资源管理系统初始化失败");
             return 1;
         }
         
-        // 创建游戏配置示例
-        createGameConfigs();
-        
         // 加载游戏资源
         loadGameResources();
+        
+        // 创建游戏配置
+        createGameConfigs();
         
         // 显示初始状态
         displaySystemStatus();
@@ -379,14 +334,13 @@ int main(int argc, char* argv[]) {
         serverLoop();
         
     } catch (const std::exception& e) {
-        std::cerr << "Fatal error: " << e.what() << std::endl;
-        LOG_ERROR("Fatal error: {}", e.what());
+        FANTASY_LOG_ERROR("Fatal error: {}", e.what());
         return 1;
     }
     
     // 清理资源
     cleanup();
     
-    std::cout << "服务器已关闭" << std::endl;
+    FANTASY_LOG_INFO("服务器正常关闭");
     return 0;
 }

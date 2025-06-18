@@ -1,12 +1,13 @@
 /**
  * @file ConfigManager.cpp
  * @brief 配置管理器实现
+ * @details 管理游戏配置的加载、保存、验证和通知
  * @author [pengchengkang]
- * @date 2025.06.17
+ * @date 2025.06.18
  */
 
-#include "include/utils/config/ConfigManager.h"
-#include "include/utils/resources/ResourceLogger.h"
+#include "utils/config/ConfigManager.h"
+#include "utils/LogSys/Logger.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -286,8 +287,8 @@ ConfigValue ConfigManager::getGameConfig(const std::string& key, const ConfigVal
     return it != pImpl_->gameConfig_.end() ? it->second : defaultValue;
 }
 
-GameConfig ConfigManager::getGameConfig() const {
-    GameConfig config;
+AppGameConfig ConfigManager::getGameConfig() const {
+    AppGameConfig config;
     config.version = ConfigUtils::toString(getGameConfig("version", "1.0.0"));
     config.language = ConfigUtils::toString(getGameConfig("language", "zh_CN"));
     config.fullscreen = ConfigUtils::toBool(getGameConfig("fullscreen", false));
@@ -304,7 +305,7 @@ GameConfig ConfigManager::getGameConfig() const {
     return config;
 }
 
-void ConfigManager::setGameConfig(const GameConfig& config) {
+void ConfigManager::setGameConfig(const AppGameConfig& config) {
     setGameConfig("version", config.version);
     setGameConfig("language", config.language);
     setGameConfig("fullscreen", config.fullscreen);

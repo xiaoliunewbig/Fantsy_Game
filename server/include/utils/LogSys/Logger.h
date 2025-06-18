@@ -100,7 +100,14 @@ public:
      * @param args 格式化参数
      */
     template<typename... Args>
-    void log(LogLevel level, const char* filename, int line, const std::string& format, Args&&... args);
+    void log(LogLevel level, const char* filename, int line, const std::string& format, Args&&... args) {
+        if (level < level_) return;
+        
+        // 简单的格式化实现 - TODO: 实现更复杂的格式化逻辑
+        std::string message = format;
+        
+        log(level, filename, line, message);
+    }
     
     // 便捷的日志记录方法
     template<typename... Args>

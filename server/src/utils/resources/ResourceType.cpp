@@ -5,7 +5,7 @@
  * @date 2025.06.17
  */
 
-#include "include/utils/resources/ResourceType.h"
+#include "utils/resources/ResourceType.h"
 #include <algorithm>
 #include <cstring>
 

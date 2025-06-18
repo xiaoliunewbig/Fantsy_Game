@@ -151,7 +151,7 @@ struct CombatEvent {
 };
 
 // 事件回调函数类型
-using EventCallback = std::function<void(const CombatEvent&)>;
+using CombatEventCallback = std::function<void(const CombatEvent&)>;
 
 // 战斗配置结构
 struct CombatConfig {
@@ -248,8 +248,8 @@ public:
     virtual void emitEvent(const CombatEvent& event);
     virtual void emitEvent(CombatEventType type, const std::string& name, 
                           const CombatEventData& data = CombatEventData{});
-    virtual void subscribeToEvent(CombatEventType type, EventCallback callback);
-    virtual void unsubscribeFromEvent(CombatEventType type, EventCallback callback);
+    virtual void subscribeToEvent(CombatEventType type, CombatEventCallback callback);
+    virtual void unsubscribeFromEvent(CombatEventType type, CombatEventCallback callback);
     
     // 获取器
     CombatState getState() const { return state_; }
@@ -306,7 +306,7 @@ private:
     std::vector<CombatAction> pendingActions_;
     
     // 事件系统
-    std::unordered_map<CombatEventType, std::vector<EventCallback>> eventCallbacks_;
+    std::unordered_map<CombatEventType, std::vector<CombatEventCallback>> eventCallbacks_;
     std::vector<CombatEvent> eventQueue_;
     
     // 内部状态

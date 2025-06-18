@@ -586,7 +586,7 @@
 			null
 		],
 		[
-			"/root/Fantasy_Legend/Fantsy_Game/client/include/utils/Logger.h",
+			"/root/Fantasy_Legend/Fantsy_Game/client/include/utils/LogSys/Logger.h",
 			"MU",
 			"KLZYWGTNTX/moc_Logger.cpp",
 			null

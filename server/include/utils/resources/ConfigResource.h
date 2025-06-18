@@ -28,6 +28,11 @@ public:
     explicit ConfigResource(const std::filesystem::path& path);
 
     /**
+     * @brief 析构函数
+     */
+    virtual ~ConfigResource();
+
+    /**
      * @brief 获取资源ID
      * @return 资源ID
      */

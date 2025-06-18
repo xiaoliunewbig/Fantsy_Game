@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/data/database/Database.h"
-#include "include/utils/resources/ResourceLogger.h"
+#include "data/database/Database.h"
+#include "utils/resources/ResourceLogger.h"
 #include <sqlite3.h>
 #include <fstream>
 #include <sstream>

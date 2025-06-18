@@ -157,7 +157,7 @@ struct SkillEvent {
 };
 
 // 事件回调函数类型
-using EventCallback = std::function<void(const SkillEvent&)>;
+using SkillEventCallback = std::function<void(const SkillEvent&)>;
 
 // 技能配置结构
 struct SkillConfig {
@@ -271,8 +271,8 @@ public:
     virtual void emitEvent(const SkillEvent& event);
     virtual void emitEvent(SkillEventType type, const std::string& name, 
                           const SkillEventData& data = SkillEventData{});
-    virtual void subscribeToEvent(SkillEventType type, EventCallback callback);
-    virtual void unsubscribeFromEvent(SkillEventType type, EventCallback callback);
+    virtual void subscribeToEvent(SkillEventType type, SkillEventCallback callback);
+    virtual void unsubscribeFromEvent(SkillEventType type, SkillEventCallback callback);
     
     // 状态检查
     virtual bool isLearned() const { return learned_; }
@@ -389,7 +389,7 @@ private:
     
     // 事件系统
     std::vector<SkillEvent> eventQueue_;
-    std::unordered_map<SkillEventType, std::vector<EventCallback>> eventCallbacks_;
+    std::unordered_map<SkillEventType, std::vector<SkillEventCallback>> eventCallbacks_;
 };
 
 } // namespace Fantasy 

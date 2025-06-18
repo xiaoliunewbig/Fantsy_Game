@@ -79,6 +79,11 @@ public:
      */
     explicit MapResource(const std::filesystem::path& path);
 
+    /**
+     * @brief 析构函数
+     */
+    virtual ~MapResource();
+
     // IResource接口实现
     const std::string& getId() const override;
     ResourceType getType() const override;

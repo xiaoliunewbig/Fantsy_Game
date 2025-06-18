@@ -6,7 +6,7 @@
  * @date 2025.06.16
  */
 
-#include "include/utils/LogSys/Logger.h"
+#include "utils/LogSys/Logger.h"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -188,18 +188,6 @@ std::string Logger::getCurrentTimestamp() {
     ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S")
        << '.' << std::setfill('0') << std::setw(3) << ms.count();
     return ss.str();
-}
-
-// 模板方法的实现
-template<typename... Args>
-void Logger::log(LogLevel level, const char* filename, int line, const std::string& format, Args&&... args) {
-    if (level < level_) return;
-    
-    // 简单的格式化实现
-    std::string message = format;
-    // TODO: 实现更复杂的格式化逻辑
-    
-    log(level, filename, line, message);
 }
 
 } // namespace Fantasy

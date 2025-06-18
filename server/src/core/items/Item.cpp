@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/core/items/Item.h"
-#include "include/core/characters/Character.h"
+#include "core/items/Item.h"
+#include "core/characters/Character.h"
 #include <algorithm>
 #include <random>
 

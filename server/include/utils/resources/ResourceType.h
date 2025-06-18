@@ -24,6 +24,7 @@ enum class ResourceType {
     SCRIPT,     ///< 脚本资源
     TEXTURE,    ///< 纹理资源
     MODEL,      ///< 模型资源
+    AUDIO,      ///< 音频资源
     SOUND,      ///< 音效资源
     MUSIC,      ///< 音乐资源
     FONT,       ///< 字体资源

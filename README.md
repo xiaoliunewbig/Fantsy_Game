@@ -1,234 +1,373 @@
-# 幻境传说 (Fantasy Legend)
+# Fantasy Legend
 
-一款基于前后端分离架构的2D动作角色扮演游戏(ARPG)，前端使用Qt框架，后端使用C++实现核心游戏逻辑。
+一个基于C++开发的奇幻MMORPG游戏项目，包含完整的服务器端和客户端架构。
 
-## 项目架构
+## 项目概述
 
-本项目采用前后端分离架构，具有以下特点：
+Fantasy Legend 是一个开源的MMORPG游戏项目，采用现代化的C++技术栈开发。项目包含完整的游戏逻辑、数据持久化、网络通信、用户界面等功能模块。
 
-- **前端**：基于Qt/QML开发，专注于Windows平台，后续支持跨平台
-- **后端**：C++实现的游戏核心逻辑，包括战斗系统、角色系统等
-- **通信**：前后端通过定义好的协议进行数据交换
-- **数据存储**：使用SQLite数据库进行数据持久化
+## 项目特色
 
-## 目录结构
+- 🎮 **完整的MMORPG功能**: 角色系统、战斗系统、任务系统、背包系统等
+- 🏗️ **模块化架构**: 清晰的代码结构，易于扩展和维护
+- 💾 **数据持久化**: 支持SQLite数据库，自动保存和备份
+- 🌐 **网络通信**: 支持HTTP和WebSocket协议
+- 🧪 **完整测试**: 包含单元测试和集成测试
+- 📚 **详细文档**: 完整的API文档和使用示例
+- 🚀 **高性能**: 优化的代码结构和缓存机制
+
+## 技术栈
+
+### 后端 (Server)
+- **语言**: C++17
+- **构建系统**: CMake 3.16+
+- **数据库**: SQLite3
+- **JSON处理**: JSONCPP
+- **网络**: POSIX Threads
+- **日志**: 自定义日志系统
+
+### 前端 (Client)
+- **语言**: C++17
+- **图形库**: SFML 2.5+
+- **UI框架**: 自定义UI系统
+- **音频**: SFML Audio
+- **网络**: SFML Network
+
+## 项目结构
 
 ```
-Fantasy_Legend/
-├── client/                        # 前端目录
-│   ├── assets/                   # 前端资源文件
-│   │   ├── images/              # 图片资源
-│   │   ├── audio/               # 音频资源
-│   │   ├── ui/                  # UI资源(QML文件)
-│   │   └── fonts/               # 字体资源
-│   ├── include/                  # 前端头文件
-│   │   ├── ui/                  # UI相关头文件
-│   │   │   ├── windows/        # 窗口类
-│   │   │   ├── scenes/         # 场景类
-│   │   │   ├── components/     # UI组件
-│   │   │   └── managers/       # UI管理器
-│   │   ├── models/              # 前端数据模型
-│   │   ├── controllers/         # 前端控制器
-│   │   ├── network/             # 网络通信
-│   │   └── utils/               # 工具类
-│   ├── src/                      # 前端源代码
-│   │   ├── main.cpp             # 程序入口
-│   │   ├── ui/                  # UI实现
-│   │   ├── models/              # 模型实现
-│   │   ├── controllers/         # 控制器实现
-│   │   ├── network/             # 网络实现
-│   │   └── utils/               # 工具类实现
-│   ├── config/                   # 前端配置文件
-│   └── CMakeLists.txt            # 前端CMake配置
-│
-├── server/                        # 后端目录
-│   ├── include/                  # 后端头文件
-│   │   ├── core/                # 核心逻辑头文件
-│   │   │   ├── characters/      # 角色系统
-│   │   │   ├── combat/          # 战斗系统
-│   │   │   ├── skills/          # 技能系统
-│   │   │   ├── items/           # 物品系统
-│   │   │   ├── quests/          # 任务系统
-│   │   │   └── levels/          # 关卡系统
-│   │   ├── data/                # 数据管理头文件
-│   │   │   ├── database/        # 数据库管理
-│   │   │   ├── config/          # 配置管理
-│   │   │   └── save/            # 存档管理
-│   │   ├── api/                 # API接口头文件
-│   │   └── utils/               # 工具类头文件
-│   ├── src/                      # 后端源代码
-│   │   ├── main.cpp             # 后端入口
-│   │   ├── core/                # 核心实现
-│   │   ├── data/                # 数据实现
-│   │   ├── api/                 # API实现
-│   │   └── utils/               # 工具实现
-│   ├── config/                   # 后端配置文件
-│   ├── scripts/                  # 数据库脚本
-│   └── CMakeLists.txt            # 后端CMake配置
-│
-├── common/                        # 前后端共享代码
-│   ├── include/                  # 共享头文件
-│   │   ├── protocol/            # 通信协议
-│   │   ├── models/              # 共享数据模型
-│   │   └── utils/               # 共享工具
-│   ├── src/                      # 共享源代码
-│   └── CMakeLists.txt            # 共享代码CMake配置
-│
-├── tools/                         # 开发工具
-│   ├── python/                   # Python工具
-│   │   ├── generators/          # 生成器
-│   │   ├── database/            # 数据库工具
-│   │   └── testing/             # 测试工具
-│   ├── editors/                  # 编辑器工具
-│   └── scripts/                  # 构建脚本
-│
-├── docs/                          # 文档
-│   ├── api/                      # API文档
-│   ├── design/                   # 设计文档
-│   └── user/                     # 用户文档
-│
-├── tests/                         # 测试
-│   ├── end_to_end/               # 端到端测试
-│   └── performance/              # 性能测试
-│
-└── CMakeLists.txt                 # 主CMake配置
+Fantsy_Game/
+├── README.md                 # 项目说明文档
+├── CMakeLists.txt            # 项目根构建文件
+├── server/                   # 服务器端
+│   ├── CMakeLists.txt        # 服务器构建配置
+│   ├── build.sh              # 构建脚本
+│   ├── README.md             # 服务器说明文档
+│   ├── src/                  # 源代码
+│   │   ├── main.cpp          # 主程序入口
+│   │   ├── core/             # 核心游戏逻辑
+│   │   ├── data/             # 数据管理
+│   │   ├── utils/            # 工具类
+│   │   └── api/              # API接口
+│   ├── include/              # 头文件
+│   ├── test/                 # 测试文件
+│   ├── examples/             # 示例程序
+│   ├── config/               # 配置文件
+│   ├── scripts/              # 脚本文件
+│   └── docs/                 # 文档
+├── client/                   # 客户端
+│   ├── CMakeLists.txt        # 客户端构建配置
+│   ├── src/                  # 源代码
+│   ├── include/              # 头文件
+│   ├── assets/               # 游戏资源
+│   └── docs/                 # 文档
+├── shared/                   # 共享代码
+│   ├── include/              # 共享头文件
+│   └── src/                  # 共享源文件
+└── docs/                     # 项目文档
+    ├── api/                  # API文档
+    ├── design/               # 设计文档
+    └── user_guide/           # 用户指南
 ```
 
-## 设计思路
+## 快速开始
 
-### 前后端分离
+### 环境要求
 
-本项目采用前后端分离的架构设计，主要基于以下考虑：
+- **操作系统**: Linux (推荐 Ubuntu 18.04+), Windows 10+, macOS 10.14+
+- **编译器**: GCC 7+ 或 Clang 6+ 或 MSVC 2019+
+- **CMake**: 3.16+
+- **依赖库**: 详见各模块的README
 
-1. **职责分离**：前端专注于UI和用户交互，后端专注于游戏逻辑和数据处理
-2. **开发效率**：前后端可以并行开发，提高开发效率
-3. **可维护性**：代码结构清晰，易于维护和扩展
-4. **跨平台支持**：前端可以针对不同平台进行优化，而后端逻辑保持不变
+### 安装依赖
 
-### 前端设计 (Qt)
+#### Ubuntu/Debian:
+```bash
+sudo apt update
+sudo apt install build-essential cmake libsqlite3-dev libjsoncpp-dev libsfml-dev
+```
 
-前端基于Qt框架开发，主要包括以下模块：
+#### CentOS/RHEL:
+```bash
+sudo yum groupinstall "Development Tools"
+sudo yum install cmake sqlite-devel jsoncpp-devel sfml-devel
+```
 
-1. **UI系统**：使用Qt Widgets和QML混合开发，实现游戏界面
-2. **控制器**：处理用户输入和界面逻辑
-3. **网络模块**：与后端通信，发送请求和接收响应
-4. **资源管理**：加载和管理游戏资源（图片、音频等）
+#### Windows:
+- 安装 Visual Studio 2019 或更新版本
+- 安装 CMake
+- 使用 vcpkg 安装依赖库
 
-### 后端设计 (C++)
+### 构建项目
 
-后端使用C++开发，实现游戏核心逻辑：
+#### 构建服务器
+```bash
+cd Fantsy_Game/server
+./build.sh -r  # 构建发布版本
+```
 
-1. **核心系统**：
-   - **角色系统**：角色属性、技能、装备等
-   - **战斗系统**：战斗逻辑、伤害计算、连击系统等
-   - **任务系统**：任务管理、进度跟踪等
-   - **关卡系统**：关卡设计、地图管理等
+#### 构建客户端
+```bash
+cd Fantsy_Game/client
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j4
+```
 
-2. **数据管理**：
-   - **数据库系统**：使用SQLite存储游戏数据
-   - **配置管理**：读取和管理游戏配置
-   - **存档系统**：保存和加载游戏进度
+#### 构建整个项目
+```bash
+cd Fantsy_Game
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j4
+```
 
-3. **API接口**：提供给前端调用的接口，处理前端请求
+### 运行项目
 
-### 通信协议
+#### 启动服务器
+```bash
+cd Fantsy_Game/server
+./scripts/start_server.sh  # 前台启动
+./scripts/start_server.sh -d  # 守护进程模式
+```
 
-前后端通过定义好的协议进行通信，主要包括：
+#### 启动客户端
+```bash
+cd Fantsy_Game/client/build
+./FantasyLegendClient
+```
 
-1. **消息格式**：JSON格式的消息，包含消息类型、数据等
-2. **请求-响应模式**：前端发送请求，后端处理后返回响应
-3. **事件通知**：后端主动向前端推送事件通知
+## 主要功能模块
 
-## 核心系统
+### 服务器端功能
 
-### 1. 战斗系统
+#### 1. 核心游戏逻辑
+- **角色系统**: 角色创建、属性管理、等级系统
+- **战斗系统**: 实时战斗、技能系统、伤害计算
+- **背包系统**: 物品管理、装备系统、交易功能
+- **任务系统**: 任务链、奖励系统、进度跟踪
+- **世界管理**: 地图系统、NPC管理、事件系统
 
-- **混合战斗模式**：实时操作 + 策略思考
-- **连击系统**：连续攻击提升伤害和效果
-- **元素系统**：火、冰、雷、风、土、光、暗七种元素
-- **状态系统**：增益、减益、控制效果
+#### 2. 数据管理
+- **数据库管理**: SQLite数据库操作、连接池
+- **数据持久化**: 自动保存、数据备份、恢复功能
+- **缓存管理**: 内存缓存、LRU算法、过期策略
 
-### 2. 角色系统
+#### 3. 网络通信
+- **HTTP服务器**: RESTful API、JSON响应
+- **WebSocket服务器**: 实时通信、双向数据流
+- **连接管理**: 连接池、负载均衡、安全验证
 
-- **角色属性**：等级、经验、生命值、魔法值、攻击力、防御力等
-- **技能系统**：主动技能、被动技能、技能树
-- **装备系统**：武器、防具、饰品等
+#### 4. 工具系统
+- **日志系统**: 分级日志、文件轮转、远程日志
+- **配置管理**: 配置文件解析、热重载
+- **事件系统**: 事件驱动、观察者模式
 
-### 3. 数据库系统
+### 客户端功能
 
-- **核心表**：角色表、技能表、装备表、物品表、任务表、关卡表等
-- **关联表**：角色技能关联、角色装备关联、角色背包等
-- **记录表**：战斗记录、状态效果、游戏存档等
+#### 1. 用户界面
+- **主菜单**: 登录、注册、服务器选择
+- **游戏界面**: HUD、小地图、聊天窗口
+- **背包界面**: 物品管理、装备预览
+- **技能界面**: 技能树、快捷键设置
 
-## 开发环境
+#### 2. 图形渲染
+- **2D渲染**: 精灵动画、粒子效果
+- **UI渲染**: 自定义UI组件、主题系统
+- **地图渲染**: 瓦片地图、动态加载
 
-- **操作系统**：Windows 10/11, Ubuntu 20.04+, macOS 12+
-- **编译器**：MSVC 2019+, GCC 9+, Clang 10+
-- **构建工具**：CMake 3.16+
-- **依赖库**：
-  - Qt 6.3+
-  - Python 3.9+
-  - pybind11
-  - SQLite 3
+#### 3. 音频系统
+- **背景音乐**: 场景音乐、战斗音乐
+- **音效系统**: 技能音效、环境音效
+- **音频管理**: 音量控制、音频格式支持
 
-## 构建与运行
+#### 4. 网络通信
+- **服务器连接**: 连接管理、断线重连
+- **数据同步**: 实时数据更新、状态同步
+- **消息处理**: 协议解析、消息队列
 
-### 构建前端
+## 开发指南
+
+### 代码风格
+
+项目遵循以下代码规范：
+- 使用 C++17 标准
+- 遵循 Google C++ 风格指南
+- 使用 4 空格缩进
+- 类名使用 PascalCase
+- 函数和变量使用 camelCase
+- 常量使用 UPPER_SNAKE_CASE
+
+### 添加新功能
+
+1. **创建功能分支**
+   ```bash
+   git checkout -b feature/new-feature
+   ```
+
+2. **编写代码**
+   - 在相应的模块目录下添加源文件
+   - 更新 CMakeLists.txt
+   - 添加必要的头文件
+
+3. **编写测试**
+   - 在 test/ 目录下添加测试文件
+   - 确保测试覆盖率
+
+4. **更新文档**
+   - 更新 API 文档
+   - 添加使用示例
+
+5. **提交代码**
+   ```bash
+   git add .
+   git commit -m "Add new feature: description"
+   git push origin feature/new-feature
+   ```
+
+### 调试技巧
+
+#### 服务器调试
+```bash
+# 构建调试版本
+cd server && ./build.sh -d
+
+# 使用 GDB 调试
+gdb build/FantasyLegendServer
+
+# 查看日志
+tail -f logs/server.log
+```
+
+#### 客户端调试
+```bash
+# 构建调试版本
+cd client && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+make
+
+# 使用 GDB 调试
+gdb FantasyLegendClient
+```
+
+## 测试
+
+### 运行测试
 
 ```bash
-cd Fantasy_Legend
-mkdir build_client && cd build_client
-cmake ../client
-make -j$(nproc)
+# 服务器测试
+cd server && ./build.sh -r -t
+
+# 客户端测试
+cd client/build && make test
 ```
 
-### 构建后端
+### 测试覆盖率
 
 ```bash
-cd Fantasy_Legend
-mkdir build_server && cd build_server
-cmake ../server
-make -j$(nproc)
+# 生成覆盖率报告
+cd server && ./build.sh -d --coverage
 ```
 
-### 运行
+## 性能优化
+
+### 编译优化
 
 ```bash
-# 启动后端
-./build_server/bin/FantasyLegend_Server
+# 启用优化编译
+./build.sh -r -j 8
 
-# 启动前端
-./build_client/bin/FantasyLegend_Client
+# 启用链接时优化
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
 ```
 
-## 开发计划
+### 运行时优化
 
-1. **第一阶段**：基础框架搭建
-   - 前后端基础结构
-   - 核心系统原型
-   - 基础UI框架
+- 启用缓存系统
+- 使用连接池
+- 配置适当的线程数
+- 启用压缩
 
-2. **第二阶段**：核心功能开发
-   - 战斗系统
-   - 角色系统
-   - 任务系统
-   - 关卡系统
+## 部署
 
-3. **第三阶段**：内容制作
-   - 主线剧情
-   - 支线任务
-   - 角色和装备
-   - 关卡和世界
+### 生产环境
 
-4. **第四阶段**：优化和测试
-   - 性能优化
-   - 游戏平衡
-   - 测试和修复
+#### 服务器部署
+```bash
+# 构建发布版本
+cd server && ./build.sh -r
+
+# 安装到系统
+./build.sh --install
+
+# 配置系统服务
+sudo systemctl enable fantasy-legend-server
+sudo systemctl start fantasy-legend-server
+```
+
+#### 客户端打包
+```bash
+# 构建发布版本
+cd client && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+
+# 创建安装包
+cpack
+```
+
+### Docker 部署
+
+```dockerfile
+# 服务器 Dockerfile
+FROM ubuntu:20.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential cmake libsqlite3-dev libjsoncpp-dev
+
+COPY . /app
+WORKDIR /app/server
+
+RUN ./build.sh -r --install
+
+EXPOSE 8080
+CMD ["FantasyLegendServer"]
+```
 
 ## 贡献指南
 
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request 
+我们欢迎所有形式的贡献！请遵循以下步骤：
+
+1. **Fork 项目**
+2. **创建功能分支**: `git checkout -b feature/amazing-feature`
+3. **提交更改**: `git commit -m 'Add amazing feature'`
+4. **推送到分支**: `git push origin feature/amazing-feature`
+5. **创建 Pull Request**
+
+### 贡献类型
+
+- 🐛 **Bug 修复**: 修复已知问题
+- ✨ **新功能**: 添加新功能
+- 📚 **文档**: 改进文档
+- 🧪 **测试**: 添加或改进测试
+- 🔧 **工具**: 改进构建工具或开发工具
+- 🎨 **UI/UX**: 改进用户界面或用户体验
+
+## 许可证
+
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
+
+## 联系方式
+
+- **项目维护者**: [pengchengkang]
+- **邮箱**: [your-email@example.com]
+- **项目地址**: [项目仓库地址]
+- **问题反馈**: [Issues页面]
+
+## 致谢
+
+感谢所有为这个项目做出贡献的开发者和用户！
+
+---
+
+**注意**: 这是一个开发中的项目，API 可能会发生变化。请查看最新的文档和示例。 

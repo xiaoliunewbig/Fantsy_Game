@@ -2,7 +2,7 @@
  * @file ModelResource.h
  * @brief 模型资源类
  * @author [pengchengkang]
- * @date 2025.06.17
+ * @date 2025.06.18
  */
 
 #pragma once
@@ -13,9 +13,42 @@
 #include <filesystem>
 #include <vector>
 #include <cstdint>
-#include <glm/glm.hpp>
+#include <cmath>
 
 namespace Fantasy {
+
+// 简单的数学结构替代GLM
+struct vec2 {
+    float x, y;
+    vec2() : x(0), y(0) {}
+    vec2(float x, float y) : x(x), y(y) {}
+};
+
+struct vec3 {
+    float x, y, z;
+    vec3() : x(0), y(0), z(0) {}
+    vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+};
+
+struct vec4 {
+    float x, y, z, w;
+    vec4() : x(0), y(0), z(0), w(0) {}
+    vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+};
+
+struct quat {
+    float x, y, z, w;
+    quat() : x(0), y(0), z(0), w(1) {}
+    quat(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+};
+
+struct mat4 {
+    float m[16];
+    mat4() {
+        for (int i = 0; i < 16; ++i) m[i] = 0;
+        m[0] = m[5] = m[10] = m[15] = 1; // 单位矩阵
+    }
+};
 
 /**
  * @brief 模型格式
@@ -34,12 +67,12 @@ enum class ModelFormat {
  * @brief 顶点数据
  */
 struct Vertex {
-    glm::vec3 position;     ///< 位置
-    glm::vec3 normal;       ///< 法线
-    glm::vec2 texCoord;     ///< 纹理坐标
-    glm::vec3 tangent;      ///< 切线
-    glm::vec3 bitangent;    ///< 副切线
-    glm::vec4 color;        ///< 颜色
+    vec3 position;     ///< 位置
+    vec3 normal;       ///< 法线
+    vec2 texCoord;     ///< 纹理坐标
+    vec3 tangent;      ///< 切线
+    vec3 bitangent;    ///< 副切线
+    vec4 color;        ///< 颜色
 };
 
 /**
@@ -47,9 +80,9 @@ struct Vertex {
  */
 struct Material {
     std::string name;                   ///< 材质名称
-    glm::vec3 ambient;                  ///< 环境光
-    glm::vec3 diffuse;                  ///< 漫反射
-    glm::vec3 specular;                 ///< 镜面反射
+    vec3 ambient;                  ///< 环境光
+    vec3 diffuse;                  ///< 漫反射
+    vec3 specular;                 ///< 镜面反射
     float shininess;                    ///< 光泽度
     std::string diffuseTexture;         ///< 漫反射纹理
     std::string normalTexture;          ///< 法线纹理
@@ -66,7 +99,7 @@ struct Mesh {
     std::vector<Vertex> vertices;       ///< 顶点数据
     std::vector<uint32_t> indices;      ///< 索引数据
     Material material;                  ///< 材质
-    glm::mat4 transform;                ///< 变换矩阵
+    mat4 transform;                ///< 变换矩阵
     uint32_t vertexCount;               ///< 顶点数量
     uint32_t indexCount;                ///< 索引数量
 };
@@ -76,8 +109,8 @@ struct Mesh {
  */
 struct Bone {
     std::string name;                   ///< 骨骼名称
-    glm::mat4 offsetMatrix;             ///< 偏移矩阵
-    glm::mat4 transform;                ///< 变换矩阵
+    mat4 offsetMatrix;             ///< 偏移矩阵
+    mat4 transform;                ///< 变换矩阵
     int parentIndex;                    ///< 父骨骼索引
     std::vector<int> childIndices;      ///< 子骨骼索引
 };
@@ -87,9 +120,9 @@ struct Bone {
  */
 struct KeyFrame {
     float time;                         ///< 时间
-    glm::vec3 position;                 ///< 位置
-    glm::quat rotation;                 ///< 旋转
-    glm::vec3 scale;                    ///< 缩放
+    vec3 position;                 ///< 位置
+    quat rotation;                 ///< 旋转
+    vec3 scale;                    ///< 缩放
 };
 
 /**
@@ -126,8 +159,8 @@ public:
         std::vector<Material> materials;    ///< 材质数据
         std::vector<Bone> bones;            ///< 骨骼数据
         std::vector<Animation> animations;  ///< 动画数据
-        glm::vec3 boundingBoxMin;          ///< 包围盒最小值
-        glm::vec3 boundingBoxMax;          ///< 包围盒最大值
+        vec3 boundingBoxMin;          ///< 包围盒最小值
+        vec3 boundingBoxMax;          ///< 包围盒最大值
         float boundingRadius;               ///< 包围球半径
     };
 
@@ -224,7 +257,7 @@ public:
      * @param min 最小值
      * @param max 最大值
      */
-    void getBoundingBox(glm::vec3& min, glm::vec3& max) const;
+    void getBoundingBox(vec3& min, vec3& max) const;
 
     /**
      * @brief 获取包围球半径
@@ -290,7 +323,7 @@ class ModelResourceLoader : public IResourceLoader {
 public:
     /**
      * @brief 构造函数
-     * @param supportedFormats 支持的模型格式列表
+     * @param supportedFormats 支持的模型格式
      */
     explicit ModelResourceLoader(const std::vector<ModelFormat>& supportedFormats = {});
 

@@ -5,9 +5,9 @@
  * @date 2025.06.17
  */
 
-#include "include/utils/config/GameConfigManager.h"
-#include "include/utils/config/ConfigManager.h"
-#include "include/utils/logging/Logger.h"
+#include "utils/config/GameConfigManager.h"
+#include "utils/config/ConfigManager.h"
+#include "utils/LogSys/Logger.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -337,20 +337,10 @@ std::unordered_map<std::string, ConfigValue> GameConfigManager::loadItemConfig(c
     return loadItemConfigFromFile(path);
 }
 
-bool GameConfigManager::saveItemConfig(const std::string& itemId, const std::unordered_map<std::string, ConfigValue>& config) {
-    auto path = getItemConfigPath(itemId);
-    return saveItemConfig(itemId, config);
-}
-
 // 技能配置方法
 std::unordered_map<std::string, ConfigValue> GameConfigManager::loadSkillConfig(const std::string& skillId) {
     auto path = getSkillConfigPath(skillId);
     return loadSkillConfigFromFile(path);
-}
-
-bool GameConfigManager::saveSkillConfig(const std::string& skillId, const std::unordered_map<std::string, ConfigValue>& config) {
-    auto path = getSkillConfigPath(skillId);
-    return saveSkillConfig(skillId, config);
 }
 
 // 任务配置方法
@@ -359,44 +349,39 @@ std::unordered_map<std::string, ConfigValue> GameConfigManager::loadQuestConfig(
     return loadQuestConfigFromFile(path);
 }
 
-bool GameConfigManager::saveQuestConfig(const std::string& questId, const std::unordered_map<std::string, ConfigValue>& config) {
-    auto path = getQuestConfigPath(questId);
-    return saveQuestConfig(questId, config);
-}
-
 // 游戏配置方法
 GameConfig GameConfigManager::loadGameConfig() {
     GameConfig config;
     
     // 从ConfigManager中获取游戏配置
     if (hasKey("gameTitle"))
-        config.gameTitle = ConfigUtils::toString(getValue("gameTitle"), "Fantasy Legend");
+        config.gameTitle = getValue<std::string>("gameTitle", "Fantasy Legend");
     if (hasKey("version"))
-        config.version = ConfigUtils::toString(getValue("version"), "1.0.0");
+        config.version = getValue<std::string>("version", "1.0.0");
     if (hasKey("targetFPS"))
-        config.targetFPS = ConfigUtils::toInt(getValue("targetFPS"), 60);
+        config.targetFPS = getValue<int>("targetFPS", 60);
     if (hasKey("enableVSync"))
-        config.enableVSync = ConfigUtils::toBool(getValue("enableVSync"), true);
+        config.enableVSync = getValue<bool>("enableVSync", true);
     if (hasKey("enableFullscreen"))
-        config.enableFullscreen = ConfigUtils::toBool(getValue("enableFullscreen"), false);
+        config.enableFullscreen = getValue<bool>("enableFullscreen", false);
     if (hasKey("windowWidth"))
-        config.windowWidth = ConfigUtils::toInt(getValue("windowWidth"), 1280);
+        config.windowWidth = getValue<int>("windowWidth", 1280);
     if (hasKey("windowHeight"))
-        config.windowHeight = ConfigUtils::toInt(getValue("windowHeight"), 720);
+        config.windowHeight = getValue<int>("windowHeight", 720);
     if (hasKey("defaultLanguage"))
-        config.defaultLanguage = ConfigUtils::toString(getValue("defaultLanguage"), "zh_CN");
+        config.defaultLanguage = getValue<std::string>("defaultLanguage", "zh_CN");
     if (hasKey("enableDebugMode"))
-        config.enableDebugMode = ConfigUtils::toBool(getValue("enableDebugMode"), false);
+        config.enableDebugMode = getValue<bool>("enableDebugMode", false);
     if (hasKey("enableProfiling"))
-        config.enableProfiling = ConfigUtils::toBool(getValue("enableProfiling"), false);
+        config.enableProfiling = getValue<bool>("enableProfiling", false);
     if (hasKey("saveDirectory"))
-        config.saveDirectory = ConfigUtils::toString(getValue("saveDirectory"), "saves");
+        config.saveDirectory = getValue<std::string>("saveDirectory", "saves");
     if (hasKey("logDirectory"))
-        config.logDirectory = ConfigUtils::toString(getValue("logDirectory"), "logs");
+        config.logDirectory = getValue<std::string>("logDirectory", "logs");
     if (hasKey("resourceDirectory"))
-        config.resourceDirectory = ConfigUtils::toString(getValue("resourceDirectory"), "resources");
+        config.resourceDirectory = getValue<std::string>("resourceDirectory", "resources");
     if (hasKey("configDirectory"))
-        config.configDirectory = ConfigUtils::toString(getValue("configDirectory"), "config");
+        config.configDirectory = getValue<std::string>("configDirectory", "config");
     
     return config;
 }
@@ -427,15 +412,15 @@ SystemConfig GameConfigManager::loadSystemConfig() {
     
     // 从ConfigManager中获取系统配置
     if (hasKey("autoSave"))
-        config.autoSave = ConfigUtils::toBool(getValue("autoSave"), true);
+        config.autoSave = getValue<bool>("autoSave", true);
     if (hasKey("autoSaveInterval"))
-        config.autoSaveInterval = ConfigUtils::toInt(getValue("autoSaveInterval"), 300);
+        config.autoSaveInterval = getValue<int>("autoSaveInterval", 300);
     if (hasKey("maxSaveSlots"))
-        config.maxSaveSlots = ConfigUtils::toInt(getValue("maxSaveSlots"), 10);
+        config.maxSaveSlots = getValue<int>("maxSaveSlots", 10);
     if (hasKey("logLevel"))
-        config.logLevel = ConfigUtils::toString(getValue("logLevel"), "info");
+        config.logLevel = getValue<std::string>("logLevel", "info");
     if (hasKey("debugMode"))
-        config.debugMode = ConfigUtils::toBool(getValue("debugMode"), false);
+        config.debugMode = getValue<bool>("debugMode", false);
     
     return config;
 }

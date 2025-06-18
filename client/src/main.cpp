@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <QStyleFactory>
 #include "ui/windows/MainWindow.h"
-#include "utils/Logger.h"
+#include "utils/LogSys/Logger.h"
 
 using namespace Fantasy;
 

@@ -85,8 +85,8 @@ struct ConfigManagerStats {
     std::chrono::milliseconds averageLoadTime;
 };
 
-// 游戏配置结构
-struct GameConfig {
+// 应用游戏配置结构
+struct AppGameConfig {
     std::string version;
     std::string language;
     bool fullscreen;
@@ -198,8 +198,8 @@ public:
     // 游戏配置
     void setGameConfig(const std::string& key, const ConfigValue& value);
     ConfigValue getGameConfig(const std::string& key, const ConfigValue& defaultValue = ConfigValue{}) const;
-    GameConfig getGameConfig() const;
-    void setGameConfig(const GameConfig& config);
+    AppGameConfig getGameConfig() const;
+    void setGameConfig(const AppGameConfig& config);
     
     // 用户配置
     void setUserConfig(const std::string& key, const ConfigValue& value);
@@ -310,7 +310,7 @@ public:
 
 // 配置管理器宏定义
 #define CONFIG_GET_VALUE(key, defaultValue) \
-    Fantasy::ConfigManager::getInstance().getValue(key, defaultValue)
+    Fantasy::ConfigManager::getInstance().getValue<decltype(defaultValue)>(key, defaultValue)
 
 #define CONFIG_SET_VALUE(key, value) \
     Fantasy::ConfigManager::getInstance().setValue(key, value)

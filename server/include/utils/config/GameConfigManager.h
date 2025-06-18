@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "include/utils/config/ConfigManager.h"
-#include "include/core/GameEngine.h"
-#include "include/core/characters/Character.h"
-#include "include/core/levels/Level.h"
+#include "utils/config/ConfigManager.h"
+#include "core/GameEngine.h"
+#include "core/characters/Character.h"
+#include "core/levels/Level.h"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -121,13 +121,10 @@ private:
     bool saveLevelConfig(const std::string& levelId, const std::unordered_map<std::string, ConfigValue>& config);
     
     std::unordered_map<std::string, ConfigValue> loadItemConfigFromFile(const std::filesystem::path& filePath);
-    bool saveItemConfig(const std::string& itemId, const std::unordered_map<std::string, ConfigValue>& config);
     
     std::unordered_map<std::string, ConfigValue> loadSkillConfigFromFile(const std::filesystem::path& filePath);
-    bool saveSkillConfig(const std::string& skillId, const std::unordered_map<std::string, ConfigValue>& config);
     
     std::unordered_map<std::string, ConfigValue> loadQuestConfigFromFile(const std::filesystem::path& filePath);
-    bool saveQuestConfig(const std::string& questId, const std::unordered_map<std::string, ConfigValue>& config);
     
     // 配置目录
     std::filesystem::path charactersDir_;

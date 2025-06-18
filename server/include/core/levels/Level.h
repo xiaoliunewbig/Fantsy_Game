@@ -204,7 +204,7 @@ struct LevelEvent {
 };
 
 // 事件回调函数类型
-using EventCallback = std::function<void(const LevelEvent&)>;
+using LevelEventCallback = std::function<void(const LevelEvent&)>;
 
 // 关卡配置结构
 struct LevelConfig {
@@ -325,8 +325,8 @@ public:
     // 事件系统
     virtual void emitEvent(const LevelEvent& event);
     virtual void emitEvent(LevelEventType type, const std::string& name, const LevelEventData& data = LevelEventData{});
-    virtual void subscribeToEvent(LevelEventType type, EventCallback callback);
-    virtual void unsubscribeFromEvent(LevelEventType type, EventCallback callback);
+    virtual void subscribeToEvent(LevelEventType type, LevelEventCallback callback);
+    virtual void unsubscribeFromEvent(LevelEventType type, LevelEventCallback callback);
     
     // 目标系统
     virtual bool addObjective(const std::string& objectiveId, const std::string& description);
@@ -433,7 +433,7 @@ private:
     std::unordered_map<std::string, Trigger> triggers_;
     
     // 事件系统
-    std::unordered_map<LevelEventType, std::vector<EventCallback>> eventCallbacks_;
+    std::unordered_map<LevelEventType, std::vector<LevelEventCallback>> eventCallbacks_;
     std::vector<LevelEvent> eventQueue_;
     
     // 内部状态

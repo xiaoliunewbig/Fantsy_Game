@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/utils/resources/ResourceLoader.h"
-#include "include/utils/resources/ResourceLogger.h"
+#include "utils/resources/ResourceLoader.h"
+#include "utils/resources/ResourceLogger.h"
 #include <algorithm>
 #include <sstream>
 

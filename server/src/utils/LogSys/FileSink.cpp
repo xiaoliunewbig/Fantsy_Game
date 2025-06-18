@@ -6,7 +6,7 @@
  * @date 2025.06.16
  */
 
-#include "include/utils/LogSys/FileSink.h"
+#include "utils/LogSys/FileSink.h"
 #include <filesystem>
 #include <chrono>
 #include <iomanip>
@@ -47,6 +47,8 @@ FileSink::~FileSink() {
 }
 
 void FileSink::log(LogLevel level, const std::string& message) {
+    (void)level; // 避免未使用参数警告
+    
     std::lock_guard<std::mutex> lock(mutex_);
     
     if (!isOpen_ && !openFile()) return;
@@ -241,7 +243,8 @@ void FileSink::cleanupOldFiles() {
             if (fileName.find("Fantasy_" + toString(type_)) != 0) continue;
             
             auto fileTime = std::filesystem::last_write_time(entry.path());
-            auto fileTimePoint = std::chrono::clock_cast<std::chrono::system_clock>(fileTime);
+            auto fileTimePoint = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+                fileTime - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
             auto age = std::chrono::duration_cast<std::chrono::hours>(now - fileTimePoint);
             
             if (age >= policy_.maxAge) {
@@ -294,7 +297,8 @@ void FileSink::cleanupThreadFunc() {
         cleanupOldFiles();
         
         // 等待下一次清理
-        for (size_t i = 0; i < policy_.cleanupInterval.count() && cleanupRunning_; ++i) {
+        auto intervalMinutes = policy_.cleanupInterval.count();
+        for (auto i = 0; i < intervalMinutes && cleanupRunning_; ++i) {
             std::this_thread::sleep_for(std::chrono::minutes(1));
         }
     }

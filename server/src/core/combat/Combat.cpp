@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/core/combat/Combat.h"
-#include "include/core/characters/Character.h"
+#include "core/combat/Combat.h"
+#include "core/characters/Character.h"
 #include <algorithm>
 #include <random>
 #include <cmath>
@@ -536,21 +536,26 @@ void Combat::emitEvent(CombatEventType type, const std::string& name,
 }
 
 // 订阅事件
-void Combat::subscribeToEvent(CombatEventType type, EventCallback callback) {
+void Combat::subscribeToEvent(CombatEventType type, CombatEventCallback callback) {
+    if (eventCallbacks_.find(type) == eventCallbacks_.end()) {
+        eventCallbacks_[type] = std::vector<CombatEventCallback>();
+    }
     eventCallbacks_[type].push_back(callback);
 }
 
 // 取消订阅事件
-void Combat::unsubscribeFromEvent(CombatEventType type, EventCallback callback) {
-    auto& callbacks = eventCallbacks_[type];
-    callbacks.erase(
-        std::remove_if(callbacks.begin(), callbacks.end(),
-            [&callback](const EventCallback& cb) {
-                return cb.target_type() == callback.target_type() && 
-                       cb.target<void(*)(const CombatEvent&)>() == callback.target<void(*)(const CombatEvent&)>();
-            }),
-        callbacks.end()
-    );
+void Combat::unsubscribeFromEvent(CombatEventType type, CombatEventCallback callback) {
+    auto it = eventCallbacks_.find(type);
+    if (it != eventCallbacks_.end()) {
+        auto& callbacks = it->second;
+        callbacks.erase(
+            std::remove_if(callbacks.begin(), callbacks.end(),
+                [&callback](const CombatEventCallback& cb) {
+                    return &cb == &callback;
+                }),
+            callbacks.end()
+        );
+    }
 }
 
 // 获取参与者

@@ -356,6 +356,9 @@ public:
     static bool isValidQuestId(const std::string& questId);
     static bool isValidItemId(const std::string& itemId);
     static bool isValidLevelId(const std::string& levelId);
+    
+    // 辅助方法
+    static std::vector<std::string> parseStringArray(const std::string& jsonStr);
 };
 
 // 数据库管理器日志宏

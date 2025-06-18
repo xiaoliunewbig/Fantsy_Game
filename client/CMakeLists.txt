@@ -17,7 +17,7 @@ set(SOURCES
     src/ui/managers/UIManager.cpp
     src/controllers/GameController.cpp
     src/network/NetworkManager.cpp
-    src/utils/Logger.cpp
+    src/utils/LogSys/Logger.cpp
     src/utils/FileUtils.cpp
 )
 
@@ -29,7 +29,7 @@ set(HEADERS
     include/ui/managers/UIManager.h
     include/controllers/GameController.h
     include/network/NetworkManager.h
-    include/utils/Logger.h
+    include/utils/LogSys/Logger.h
     include/utils/FileUtils.h
 )
 

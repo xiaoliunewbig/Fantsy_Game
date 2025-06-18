@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "ResourceManager.h"
-#include "ResourceLogger.h"
+#include "utils/resources/ResourceManager.h"
+#include "utils/resources/ResourceLogger.h"
 #include <filesystem>
 #include <algorithm>
 #include <sstream>
@@ -14,8 +14,8 @@
 namespace Fantasy {
 
 ResourceManager::ResourceManager()
-    : initialized_(false)
-    , resourceRoot_("resources") {
+    : resourceRoot_("resources")
+    , initialized_(false) {
 }
 
 ResourceManager::~ResourceManager() {

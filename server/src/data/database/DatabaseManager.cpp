@@ -5,8 +5,8 @@
  * @date 2025.06.17
  */
 
-#include "include/data/database/DatabaseManager.h"
-#include "include/utils/resources/ResourceLogger.h"
+#include "data/database/DatabaseManager.h"
+#include "utils/resources/ResourceLogger.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -323,7 +323,7 @@ std::future<DatabaseResult> DatabaseManager::queryAsync(const std::string& sql, 
     return std::async(std::launch::async, [this, database, sql, params, targetConnection]() {
         auto result = database->query(sql, params);
         logQuery(targetConnection, sql, result);
-        return result;
+    return result;
     });
 }
 
@@ -375,12 +375,13 @@ bool DatabaseManager::isInTransaction(const std::string& connectionName) const {
         targetConnection = selectConnection(DatabaseRole::MASTER);
     }
     
-    auto database = getDatabase(targetConnection);
-    if (!database) {
+    std::lock_guard<std::mutex> lock(pImpl_->mutex_);
+    auto it = pImpl_->databases_.find(targetConnection);
+    if (it == pImpl_->databases_.end()) {
         return false;
     }
     
-    return database->isInTransaction();
+    return it->second->isInTransaction();
 }
 
 bool DatabaseManager::createTables() {
@@ -667,11 +668,19 @@ bool DatabaseManager::syncData(const std::string& sourceConnection, const std::s
 // 游戏特定数据操作实现
 bool DatabaseManager::saveCharacter(const CharacterData& character) {
     auto data = DatabaseManagerUtils::characterToMap(character);
-    return insert("characters", data) > 0;
+    std::string sql = "INSERT OR REPLACE INTO characters (id, name, level, experience, health, mana, strength, agility, intelligence, skills, equipment, last_login_time, created_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    std::vector<DatabaseValue> params = {
+        data["id"], data["name"], data["level"], data["experience"], 
+        data["health"], data["mana"], data["strength"], data["agility"], 
+        data["intelligence"], data["skills"], data["equipment"], 
+        data["last_login_time"], data["created_time"]
+    };
+    return query(sql, params).success;
 }
 
 std::optional<CharacterData> DatabaseManager::loadCharacter(const std::string& characterId) {
-    auto result = select("characters", {}, "id = '" + DatabaseUtils::escapeString(characterId) + "'");
+    std::string sql = "SELECT * FROM characters WHERE id = ?";
+    auto result = query(sql, {characterId});
     if (result.rows.empty()) {
         return std::nullopt;
     }
@@ -681,11 +690,13 @@ std::optional<CharacterData> DatabaseManager::loadCharacter(const std::string& c
 }
 
 bool DatabaseManager::deleteCharacter(const std::string& characterId) {
-    return delete_("characters", "id = '" + DatabaseUtils::escapeString(characterId) + "'");
+    std::string sql = "DELETE FROM characters WHERE id = ?";
+    return query(sql, {characterId}).success;
 }
 
 std::vector<CharacterData> DatabaseManager::getAllCharacters() {
-    auto result = select("characters");
+    std::string sql = "SELECT * FROM characters";
+    auto result = query(sql);
     std::vector<CharacterData> characters;
     
     for (const auto& row : result.rows) {
@@ -697,9 +708,9 @@ std::vector<CharacterData> DatabaseManager::getAllCharacters() {
 }
 
 std::vector<CharacterData> DatabaseManager::getCharactersByLevel(int minLevel, int maxLevel) {
-    std::string whereClause = "level >= " + std::to_string(minLevel) + 
-                             " AND level <= " + std::to_string(maxLevel);
-    auto result = select("characters", {}, whereClause);
+    std::string sql = "SELECT * FROM characters WHERE level >= ? AND level <= ?";
+    std::vector<DatabaseValue> params = {minLevel, maxLevel};
+    auto result = query(sql, params);
     std::vector<CharacterData> characters;
     
     for (const auto& row : result.rows) {
@@ -711,13 +722,13 @@ std::vector<CharacterData> DatabaseManager::getCharactersByLevel(int minLevel, i
 }
 
 bool DatabaseManager::updateCharacterLevel(const std::string& characterId, int newLevel) {
-    std::unordered_map<std::string, DatabaseValue> data{{"level", newLevel}};
-    return update("characters", data, "id = '" + DatabaseUtils::escapeString(characterId) + "'");
+    std::string sql = "UPDATE characters SET level = ? WHERE id = ?";
+    return query(sql, {newLevel, characterId}).success;
 }
 
 bool DatabaseManager::updateCharacterExperience(const std::string& characterId, int experience) {
-    std::unordered_map<std::string, DatabaseValue> data{{"experience", experience}};
-    return update("characters", data, "id = '" + DatabaseUtils::escapeString(characterId) + "'");
+    std::string sql = "UPDATE characters SET experience = ? WHERE id = ?";
+    return query(sql, {experience, characterId}).success;
 }
 
 // 其他游戏数据操作方法的实现类似，这里省略...
@@ -876,8 +887,24 @@ std::unordered_map<std::string, DatabaseValue> DatabaseManagerUtils::characterTo
     map["strength"] = character.strength;
     map["agility"] = character.agility;
     map["intelligence"] = character.intelligence;
-    map["skills"] = character.skills;
-    map["equipment"] = character.equipment;
+    
+    // 将vector<string>转换为JSON字符串
+    std::string skillsJson = "[";
+    for (size_t i = 0; i < character.skills.size(); ++i) {
+        if (i > 0) skillsJson += ",";
+        skillsJson += "\"" + character.skills[i] + "\"";
+    }
+    skillsJson += "]";
+    map["skills"] = skillsJson;
+    
+    std::string equipmentJson = "[";
+    for (size_t i = 0; i < character.equipment.size(); ++i) {
+        if (i > 0) equipmentJson += ",";
+        equipmentJson += "\"" + character.equipment[i] + "\"";
+    }
+    equipmentJson += "]";
+    map["equipment"] = equipmentJson;
+    
     map["last_login_time"] = timeToString(character.lastLoginTime);
     map["created_time"] = timeToString(character.createdTime);
     return map;
@@ -894,14 +921,43 @@ CharacterData DatabaseManagerUtils::mapToCharacter(const std::unordered_map<std:
     character.strength = DatabaseUtils::toInt(map.at("strength"));
     character.agility = DatabaseUtils::toInt(map.at("agility"));
     character.intelligence = DatabaseUtils::toInt(map.at("intelligence"));
-    character.skills = DatabaseUtils::toStringArray(map.at("skills"));
-    character.equipment = DatabaseUtils::toStringArray(map.at("equipment"));
+    
+    // 从JSON字符串解析vector<string>
+    std::string skillsStr = DatabaseUtils::toString(map.at("skills"));
+    character.skills = parseStringArray(skillsStr);
+    
+    std::string equipmentStr = DatabaseUtils::toString(map.at("equipment"));
+    character.equipment = parseStringArray(equipmentStr);
+    
     character.lastLoginTime = stringToTime(DatabaseUtils::toString(map.at("last_login_time")));
     character.createdTime = stringToTime(DatabaseUtils::toString(map.at("created_time")));
     return character;
 }
 
-// 其他数据转换方法的实现类似...
+// 辅助方法：解析JSON数组字符串
+std::vector<std::string> DatabaseManagerUtils::parseStringArray(const std::string& jsonStr) {
+    std::vector<std::string> result;
+    if (jsonStr.empty() || jsonStr == "[]") {
+        return result;
+    }
+    
+    // 简单的JSON数组解析
+    std::string content = jsonStr.substr(1, jsonStr.length() - 2); // 移除 [ ]
+    std::stringstream ss(content);
+    std::string item;
+    
+    while (std::getline(ss, item, ',')) {
+        // 移除引号和空格
+        if (item.length() >= 2 && item[0] == '"' && item[item.length()-1] == '"') {
+            item = item.substr(1, item.length() - 2);
+        }
+        if (!item.empty()) {
+            result.push_back(item);
+        }
+    }
+    
+    return result;
+}
 
 std::string DatabaseManagerUtils::timeToString(std::chrono::system_clock::time_point time) {
     auto time_t = std::chrono::system_clock::to_time_t(time);

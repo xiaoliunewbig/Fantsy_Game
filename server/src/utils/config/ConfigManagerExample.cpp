@@ -7,12 +7,16 @@
  * 展示配置管理器与资源管理和日志系统的集成使用
  */
 
-#include "include/utils/config/ConfigManager.h"
-#include "include/utils/resources/ResourceSystem.h"
-#include "include/utils/LogSys/Logger.h"
+#include "utils/config/ConfigManager.h"
+#include "utils/resources/ResourceSystem.h"
+#include "utils/LogSys/Logger.h"
+#include "utils/LogSys/ConsoleSink.h"
+#include "utils/LogSys/FileSink.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <fstream>
+#include <filesystem>
 
 using namespace Fantasy;
 
@@ -22,9 +26,8 @@ int main() {
     // 1. 初始化日志系统
     std::cout << "\n1. 初始化日志系统..." << std::endl;
     auto& logger = Logger::getInstance();
-    logger.initialize();
     logger.addSink(std::make_shared<ConsoleSink>());
-    logger.addSink(std::make_shared<FileSink>("logs/config_example.log"));
+    logger.addSink(std::make_shared<FileSink>("logs", LogType::PROGRAM));
     
     FANTASY_LOG_INFO("配置管理器示例开始");
     
@@ -41,7 +44,7 @@ int main() {
     ResourceSystemConfig resourceConfig;
     resourceConfig.resourceRootDir = "resources/";
     resourceConfig.maxCacheSize = 100 * 1024 * 1024; // 100MB
-    resourceConfig.loadingThreads = 4;
+    resourceConfig.maxLoadingThreads = 4;
     resourceConfig.enableLogging = true;
     resourceConfig.enablePerformanceMonitoring = true;
     
@@ -166,7 +169,6 @@ int main() {
     
     // 根据配置调整资源系统
     if (compressionEnabled) {
-        resourceSystem.setCompressionLevel(compressionLevel);
         FANTASY_LOG_INFO("资源压缩已启用，级别: {}", compressionLevel);
     }
     
@@ -229,7 +231,6 @@ int main() {
     
     configManager.shutdown();
     resourceSystem.shutdown();
-    logger.shutdown();
     
     FANTASY_LOG_INFO("配置管理器示例完成");
     std::cout << "\n=== 配置管理器示例完成 ===" << std::endl;
