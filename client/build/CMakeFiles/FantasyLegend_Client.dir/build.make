@@ -90,10 +90,24 @@ CMakeFiles/FantasyLegend_Client.dir/FantasyLegend_Client_autogen/mocs_compilatio
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/FantasyLegend_Client_autogen/mocs_compilation.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/build/FantasyLegend_Client_autogen/mocs_compilation.cpp -o CMakeFiles/FantasyLegend_Client.dir/FantasyLegend_Client_autogen/mocs_compilation.cpp.s
 
+CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
+CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp
+
+CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp > CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i
+
+CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s
+
 CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
 CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/main.cpp
 CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/main.cpp
 
 CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.i: cmake_force
@@ -104,24 +118,24 @@ CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/main.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.s
 
-CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
-CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp
-CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
+CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp
 
-CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp > CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i
+CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp > CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i
 
-CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s
+CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s
 
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/components/MainMenu.cpp
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/components/MainMenu.cpp
 
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.i: cmake_force
@@ -135,7 +149,7 @@ CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.s: cmake_forc
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/components/PauseMenu.cpp
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/components/PauseMenu.cpp
 
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.i: cmake_force
@@ -145,20 +159,6 @@ CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.i: cmake_for
 CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/components/PauseMenu.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.s
-
-CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
-CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp
-CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp
-
-CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp > CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i
-
-CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s
 
 CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
 CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/managers/UIManager.cpp
@@ -174,52 +174,38 @@ CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/managers/UIManager.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.s
 
-CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
-CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp
-CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
+CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp
 
-CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp > CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.i
+CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp > CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.i
 
-CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/controllers/GameController.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.s
+CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/scenes/GameScene.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.s
 
-CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
-CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp
-CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
+CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp
 
-CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp > CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.i
+CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp > CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.i
 
-CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/network/NetworkManager.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.s
-
-CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
-CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp
-CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp
-
-CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp > CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i
-
-CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s
+CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/ui/windows/MainWindow.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.s
 
 CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
 CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/utils/FileUtils.cpp
 CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/utils/FileUtils.cpp
 
 CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.i: cmake_force
@@ -230,34 +216,48 @@ CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/utils/FileUtils.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.s
 
+CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: CMakeFiles/FantasyLegend_Client.dir/flags.make
+CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp
+CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o: CMakeFiles/FantasyLegend_Client.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/root/Fantasy_Legend/Fantsy_Game/client/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o -MF CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o.d -o CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o -c /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp
+
+CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp > CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.i
+
+CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/Fantasy_Legend/Fantsy_Game/client/src/utils/Logger.cpp -o CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.s
+
 # Object files for target FantasyLegend_Client
 FantasyLegend_Client_OBJECTS = \
 "CMakeFiles/FantasyLegend_Client.dir/FantasyLegend_Client_autogen/mocs_compilation.cpp.o" \
+"CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o" \
 "CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o" \
+"CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o" \
 "CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o" \
 "CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o" \
 "CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o" \
-"CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o"
+"CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o" \
+"CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o" \
+"CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o" \
+"CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o"
 
 # External object files for target FantasyLegend_Client
 FantasyLegend_Client_EXTERNAL_OBJECTS =
 
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/FantasyLegend_Client_autogen/mocs_compilation.cpp.o
+bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/main.cpp.o
-bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o
+bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/components/MainMenu.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/components/PauseMenu.cpp.o
-bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/managers/UIManager.cpp.o
-bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/controllers/GameController.cpp.o
-bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/network/NetworkManager.cpp.o
-bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o
+bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/scenes/GameScene.cpp.o
+bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/ui/windows/MainWindow.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/utils/FileUtils.cpp.o
+bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/src/utils/Logger.cpp.o
 bin/FantasyLegend_Client: CMakeFiles/FantasyLegend_Client.dir/build.make
 bin/FantasyLegend_Client: /home/pck/tools/qtlib/lib/libQt6Widgets.so.6.3.1
 bin/FantasyLegend_Client: /home/pck/tools/qtlib/lib/libQt6QuickControls2.so.6.3.1

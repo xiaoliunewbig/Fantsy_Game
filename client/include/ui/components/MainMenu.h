@@ -5,113 +5,66 @@
  * @date 2025.06.17
  */
 
-#ifndef MAINMENU_H
-#define MAINMENU_H
+#ifndef PURE_MAINMENU_H
+#define PURE_MAINMENU_H
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLabel>
-#include <QGraphicsDropShadowEffect>
-#include <QPropertyAnimation>
-#include <QTimer>
+#include <vector>
+#include <string>
+#include <functional>
 
 namespace Fantasy {
 
+// 按钮类型定义
+struct Button {
+    std::string label;
+    std::function<void()> onClick;
+};
+
 /**
- * @brief 主菜单组件
- * 
- * 提供游戏的主菜单界面，包括：
- * - 游戏标题和副标题
- * - 新游戏、加载游戏、设置、退出等按钮
- * - 动画效果
- * - 背景音乐控制
+ * @brief 主菜单组件（无 Qt 依赖）
  */
-class MainMenu : public QWidget
-{
-    Q_OBJECT
-
+class MainMenu {
 public:
-    explicit MainMenu(QWidget* parent = nullptr);
-    ~MainMenu();
+    // 构造函数
+    MainMenu();
 
-    // 动画控制
+    // 显示/隐藏菜单
     void showMenu();
     void hideMenu();
-    void animateButtons();
 
-signals:
-    // 菜单事件信号
-    void newGameClicked();
-    void loadGameClicked();
-    void settingsClicked();
-    void exitClicked();
+    // 更新与渲染（模拟）
+    void update(float deltaTime);
+    void render() const;
 
-protected:
-    // 事件处理
-    void paintEvent(QPaintEvent* event) override;
-    void showEvent(QShowEvent* event) override;
-    void hideEvent(QHideEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
+    // 添加按钮
+    void addButton(const std::string& label, const std::function<void()>& callback);
 
-private slots:
-    // 按钮事件处理
-    void onNewGameButtonClicked();
-    void onLoadGameButtonClicked();
-    void onSettingsButtonClicked();
-    void onExitButtonClicked();
-    
-    // 动画处理
-    void onButtonAnimationFinished();
-    void onBackgroundAnimationUpdate();
+    // 设置标题和副标题
+    void setTitle(const std::string& title);
+    void setSubtitle(const std::string& subtitle);
+
+    // 设置版权信息
+    void setCopyright(const std::string& copyright);
+
+    // 键盘输入模拟
+    void onKeyPress(const std::string& key);
 
 private:
-    // UI初始化
-    void setupUI();
-    void createTitle();
-    void createButtons();
-    void createFooter();
-    void setupAnimations();
-    void applyStyles();
-    
-    // 动画效果
-    void animateButton(QPushButton* button, int delay);
-    void startBackgroundAnimation();
-    void stopBackgroundAnimation();
+    std::string m_title;                ///< 标题
+    std::string m_subtitle;             ///< 副标题
+    std::string m_copyright;            ///< 版权信息
+    std::vector<Button> m_buttons;      ///< 按钮列表
+    bool m_isVisible;                   ///< 是否可见
+    float m_animationProgress;          ///< 动画进度 [0.0f - 1.0f]
+    float m_backgroundOffset;           ///< 背景偏移动画值
 
-private:
-    // UI组件
-    QVBoxLayout* m_mainLayout;          ///< 主布局
-    QLabel* m_titleLabel;               ///< 标题标签
-    QLabel* m_subtitleLabel;            ///< 副标题标签
-    QWidget* m_buttonContainer;         ///< 按钮容器
-    QVBoxLayout* m_buttonLayout;        ///< 按钮布局
-    QLabel* m_copyrightLabel;           ///< 版权信息标签
-    
-    // 按钮
-    QPushButton* m_newGameButton;       ///< 新游戏按钮
-    QPushButton* m_loadGameButton;      ///< 加载游戏按钮
-    QPushButton* m_settingsButton;      ///< 设置按钮
-    QPushButton* m_exitButton;          ///< 退出按钮
-    
-    // 动画
-    QPropertyAnimation* m_titleAnimation;   ///< 标题动画
-    QPropertyAnimation* m_subtitleAnimation; ///< 副标题动画
-    QTimer* m_buttonAnimationTimer;         ///< 按钮动画定时器
-    QTimer* m_backgroundAnimationTimer;     ///< 背景动画定时器
-    
-    // 动画状态
-    int m_currentButtonIndex;           ///< 当前动画按钮索引
-    bool m_isAnimating;                 ///< 是否正在动画
-    double m_backgroundOffset;          ///< 背景偏移
-    
-    // 样式
-    QString m_buttonStyle;              ///< 按钮样式
-    QString m_titleStyle;               ///< 标题样式
-    QString m_subtitleStyle;            ///< 副标题样式
+    // 内部方法
+    void animateTitle(float deltaTime);
+    void animateButtons(float deltaTime);
+    void drawBackground() const;
+    void drawText(const std::string& text, int x, int y, int fontSize, const std::string& color) const;
 };
 
 } // namespace Fantasy
 
-#endif // MAINMENU_H 
+#endif // PURE_MAINMENU_H

@@ -1,118 +1,82 @@
 /**
  * @file FileUtils.h
- * @brief 文件工具
+ * @brief 文件工具类 - 提供常用文件操作方法
  * @author [pengchengkang]
- * @date 2025.06.17
+ * @date 2025.06.19
+ *
+ * 功能特性:
+ * - 文件读写支持
+ * - 文件路径处理
+ * - 文件存在性检查
+ * - 支持目录遍历
+ * - 支持压缩文件处理（TODO）
  */
+#ifndef FILE_UTILS_H
+#define FILE_UTILS_H
 
-#ifndef FILEUTILS_H
-#define FILEUTILS_H
+#include <string>
+#include <vector>
+#include <fstream>
 
-#include <QObject>
-#include <QString>
-#include <QStringList>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QVariantMap>
-#include <QVariantList>
-
-namespace Fantasy {
-
-/**
- * @brief 文件工具类
- * 
- * 提供文件操作相关的工具方法
- */
-class FileUtils : public QObject {
-    Q_OBJECT
-    
+class FileUtils {
 public:
-    static FileUtils* instance();
-    
-    // 路径相关
-    static QString getApplicationDir();
-    static QString getDataDir();
-    static QString getConfigDir();
-    static QString getLogDir();
-    
-    // 文件操作
-    static bool fileExists(const QString& filePath);
-    static bool directoryExists(const QString& dirPath);
-    static bool createDirectory(const QString& dirPath);
-    static bool createDirectories(const QString& dirPath);
-    static bool removeFile(const QString& filePath);
-    static bool removeDirectory(const QString& dirPath, bool recursive = false);
-    static bool copyFile(const QString& sourcePath, const QString& destPath);
-    static bool moveFile(const QString& sourcePath, const QString& destPath);
-    
-    // 文件信息
-    static qint64 getFileSize(const QString& filePath);
-    static QString getFileExtension(const QString& filePath);
-    static QString getFileName(const QString& filePath);
-    static QString getDirectoryPath(const QString& filePath);
-    static QDateTime getFileModifiedTime(const QString& filePath);
-    static QDateTime getFileCreatedTime(const QString& filePath);
-    
-    // 目录操作
-    static QStringList getFilesInDirectory(const QString& dirPath, const QStringList& filters = QStringList());
-    static QStringList getDirectoriesInDirectory(const QString& dirPath);
-    static QStringList getAllFilesInDirectory(const QString& dirPath, bool recursive = false);
-    
-    // 路径操作
-    static QString combinePath(const QString& path1, const QString& path2);
-    static QString getAbsolutePath(const QString& relativePath);
-    static QString getRelativePath(const QString& absolutePath, const QString& basePath);
-    static QString normalizePath(const QString& path);
-    
-    // 文本文件操作
-    static QString readTextFile(const QString& filePath);
-    static bool writeTextFile(const QString& filePath, const QString& content);
-    static bool appendTextFile(const QString& filePath, const QString& content);
-    
-    // JSON文件操作
-    static QJsonObject readJsonFile(const QString& filePath);
-    static QJsonArray readJsonArrayFile(const QString& filePath);
-    static bool writeJsonFile(const QString& filePath, const QJsonObject& json);
-    static bool writeJsonFile(const QString& filePath, const QJsonArray& json);
-    static bool writeJsonFile(const QString& filePath, const QVariantMap& data);
-    static bool writeJsonFile(const QString& filePath, const QVariantList& data);
-    
-    // 二进制文件操作
-    static QByteArray readBinaryFile(const QString& filePath);
-    static bool writeBinaryFile(const QString& filePath, const QByteArray& data);
-    
-    // 资源文件操作
-    static QString getResourcePath(const QString& resourceName);
-    static bool isResourceFile(const QString& filePath);
-    static QStringList getResourceFiles(const QString& resourceDir);
-    
-    // 临时文件操作
-    static QString createTempFile(const QString& prefix = "temp", const QString& suffix = "");
-    static QString createTempDirectory(const QString& prefix = "temp");
-    static void cleanupTempFiles();
-    
-    // 文件监控
-    static bool startWatchingFile(const QString& filePath, QObject* receiver, const char* slot);
-    static void stopWatchingFile(const QString& filePath);
-    
-signals:
-    void fileChanged(const QString& filePath);
-    void fileCreated(const QString& filePath);
-    void fileDeleted(const QString& filePath);
-    void fileRenamed(const QString& oldPath, const QString& newPath);
-    
-private:
-    FileUtils();
-    ~FileUtils();
-    
-    static FileUtils* s_instance;
-    QString m_tempDirectory;
+    /**
+     * @brief 读取文件全部内容为字符串
+     * @param filePath 文件路径
+     * @return 文件内容字符串
+     */
+    static std::string ReadFileToString(const std::string& filePath);
+
+    /**
+     * @brief 将字符串写入文件
+     * @param filePath 文件路径
+     * @param content 内容
+     * @return 是否成功
+     */
+    static bool WriteStringToFile(const std::string& filePath, const std::string& content);
+
+    /**
+     * @brief 检查文件是否存在
+     * @param filePath 文件路径
+     * @return 是否存在
+     */
+    static bool FileExists(const std::string& filePath);
+
+    /**
+     * @brief 获取文件大小
+     * @param filePath 文件路径
+     * @return 文件大小（字节）
+     */
+    static long long GetFileSize(const std::string& filePath);
+
+    /**
+     * @brief 创建目录（递归创建）
+     * @param dirPath 目录路径
+     * @return 是否成功
+     */
+    static bool CreateDirectory(const std::string& dirPath);
+
+    /**
+     * @brief 获取目录下的所有文件列表
+     * @param dirPath 目录路径
+     * @return 文件路径列表
+     */
+    static std::vector<std::string> GetFilesInDirectory(const std::string& dirPath);
+
+    /**
+     * @brief 删除指定文件
+     * @param filePath 文件路径
+     * @return 是否成功
+     */
+    static bool DeleteFile(const std::string& filePath);
+
+    /**
+     * @brief 解压 ZIP/RAR 文件到指定目录
+     * @param archivePath 压缩包路径
+     * @param outputDir 输出目录
+     * @todo 实现解压功能
+     */
+    static bool ExtractArchive(const std::string& archivePath, const std::string& outputDir);
 };
 
-} // namespace Fantasy
-
-#endif // FILEUTILS_H
+#endif // FILE_UTILS_H

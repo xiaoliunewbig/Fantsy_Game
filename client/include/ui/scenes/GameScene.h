@@ -8,16 +8,11 @@
 #ifndef GAMESCENE_H
 #define GAMESCENE_H
 
-#include <QWidget>
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QTimer>
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QVector2D>
-#include <QList>
-#include <QMap>
-#include <QPainter>
+#include <string>
+#include <vector>
+#include <map>
+#include <functional>
+#include <memory>
 
 // 前向声明
 class Character;
@@ -26,115 +21,126 @@ class UIManager;
 
 namespace Fantasy {
 
+struct Vector2 {
+    float x, y;
+
+    Vector2(float x = 0.0f, float y = 0.0f) : x(x), y(y) {}
+
+    static Vector2 screenToWorld(const std::pair<int, int>& screenPos, float cameraX, float cameraY, float zoom);
+    static std::pair<int, int> worldToScreen(const Vector2& worldPos, float cameraX, float cameraY, float zoom);
+};
+
 /**
- * @brief 游戏场景类
- * 
+ * @brief 游戏场景类（无 Qt 依赖）
+ *
  * 负责渲染游戏世界和角色
  */
-class GameScene : public QWidget {
-    Q_OBJECT
-    
+class GameScene {
 public:
-    explicit GameScene(QWidget* parent = nullptr);
+    using Callback = std::function<void()>;
+    using CharacterMovedCallback = std::function<void(Character*, const Vector2&)>;
+    using CharacterSelectedCallback = std::function<void(Character*)>;
+    using SceneClickedCallback = std::function<void(const Vector2&)>;
+    using KeyPressedCallback = std::function<void(int key)>;
+    using KeyReleasedCallback = std::function<void(int key)>;
+
+public:
+    GameScene();
     ~GameScene();
-    
+
     // 游戏控制
     void startGame();
     void pauseGame();
     void resumeGame();
     void stopGame();
-    
+
     // 场景控制
     void startScene();
     void pauseScene();
     void resumeScene();
     void stopScene();
-    
+
     // 角色管理
     void addCharacter(Character* character);
     void removeCharacter(Character* character);
-    void updateCharacterPosition(Character* character, const QVector2D& position);
-    
+    void updateCharacterPosition(Character* character, const Vector2& position);
+
     // 渲染控制
-    void setBackground(const QString& backgroundPath);
-    void addEffect(const QString& effectType, const QVector2D& position);
+    void setBackground(const std::string& backgroundPath);
+    void addEffect(const std::string& effectType, const Vector2& position);
     void clearEffects();
-    
+
     // 输入处理
     void setInputEnabled(bool enabled);
     bool isInputEnabled() const { return m_inputEnabled; }
-    
-    // 视图控制
-    void setCameraPosition(const QVector2D& position);
+
+    // 摄像机控制
+    void setCameraPosition(const Vector2& position);
     void setCameraZoom(float zoom);
     void followCharacter(Character* character);
-    
+
     // 获取器
-    QGraphicsScene* getGraphicsScene() const { return m_graphicsScene; }
-    QGraphicsView* getGraphicsView() const { return m_graphicsView; }
-    QList<Character*> getCharacters() const { return m_characters; }
-    
-signals:
-    void characterMoved(Character* character, const QVector2D& position);
-    void characterSelected(Character* character);
-    void sceneClicked(const QVector2D& position);
-    void keyPressed(int key);
-    void keyReleased(int key);
-    
-protected:
-    // 事件处理
-    void paintEvent(QPaintEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void wheelEvent(QWheelEvent* event) override;
-    void resizeEvent(QResizeEvent* event) override;
-    
-private slots:
-    void update();
-    void updateScene(float deltaTime);
-    void onCharacterPositionChanged(Character* character, const QVector2D& position);
-    
+    std::vector<Character*> getCharacters() const { return m_characters; }
+
+    // 回调注册
+    void onCharacterMoved(CharacterMovedCallback cb);
+    void onCharacterSelected(CharacterSelectedCallback cb);
+    void onSceneClicked(SceneClickedCallback cb);
+    void onKeyPressed(KeyPressedCallback cb);
+    void onKeyReleased(KeyReleasedCallback cb);
+
+    // 更新与渲染
+    void update(float deltaTime);
+    void render() const;
+
+    // 模拟输入事件
+    void simulateKeyPress(int key);
+    void simulateKeyRelease(int key);
+    void simulateMousePress(int x, int y);
+    void simulateMouseMove(int x, int y);
+    void simulateMouseRelease(int x, int y);
+    void simulateWheelEvent(int delta);
+
 private:
     void setupUI();
     void setupConnections();
     void initializeGraphics();
     void updateCamera();
-    QVector2D screenToWorld(const QPoint& screenPos);
-    QPoint worldToScreen(const QVector2D& worldPos);
-    
-    // UI组件
-    QGraphicsView* m_graphicsView;
-    QGraphicsScene* m_graphicsScene;
-    
+
+private:
+    // UI组件（模拟）
+    std::string m_currentBackground;
+    std::vector<std::pair<std::string, Vector2>> m_effects;
+
     // 场景状态
     bool m_isRunning;
     bool m_inputEnabled;
-    QString m_currentBackground;
-    
+
     // 角色管理
-    QList<Character*> m_characters;
+    std::vector<Character*> m_characters;
     Character* m_followTarget;
-    
-    // 相机控制
-    QVector2D m_cameraPosition;
+
+    // 摄像机控制
+    Vector2 m_cameraPosition;
     float m_cameraZoom;
-    QVector2D m_targetCameraPosition;
-    
+    Vector2 m_targetCameraPosition;
+
     // 输入状态
-    QMap<int, bool> m_keyStates;
-    QVector2D m_mousePosition;
+    std::map<int, bool> m_keyStates;
+    Vector2 m_mousePosition;
     bool m_mousePressed;
-    
+
     // 定时器
-    QTimer* m_gameTimer;    ///< 游戏更新定时器
-    
-    // 特效管理
-    QList<QGraphicsItem*> m_effects;
+    float m_updateInterval;
+
+    // 回调列表
+    std::vector<CharacterMovedCallback> m_characterMovedCallbacks;
+    std::vector<CharacterSelectedCallback> m_characterSelectedCallbacks;
+    std::vector<SceneClickedCallback> m_sceneClickedCallbacks;
+    std::vector<KeyPressedCallback> m_keyPressedCallbacks;
+    std::vector<KeyReleasedCallback> m_keyReleasedCallbacks;
 };
 
 } // namespace Fantasy
 
-#endif // GAMESCENE_H
+#endif // PURE_GAMESCENE_H

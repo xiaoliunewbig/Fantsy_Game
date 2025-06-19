@@ -1,194 +1,103 @@
 /**
  * @file UIManager.h
- * @brief UI管理器
+ * @brief UI 管理器 - 统一管理界面显示、切换与交互逻辑
  * @author [pengchengkang]
- * @date 2025.06.17
+ * @date 2025.06.19
+ *
+ * 功能特性:
+ * - 支持界面打开/关闭
+ * - 支持界面层级管理（Z-order）
+ * - 支持界面动画过渡
+ * - 支持多语言界面切换（TODO）
+ * - 支持UI资源热加载（TODO）
  */
+#ifndef UI_MANAGER_H
+#define UI_MANAGER_H
 
-#ifndef UIMANAGER_H
-#define UIMANAGER_H
+#include <string>
+#include <unordered_map>
+#include <functional>
 
-#include <QObject>
-#include <QString>
-#include <QMap>
-#include <QVariantMap>
-#include <QTimer>
-#include <QWidget>
-#include <QList>
-
-// 前向声明
-class QLabel;
-class QProgressBar;
-class QPushButton;
-class QWidget;
-
-namespace Fantasy {
+class UIWindow;
 
 /**
- * @brief UI管理器类
+ * @brief UIManager 类
  * 
- * 负责管理所有UI元素和状态
+ * 统一管理游戏或应用程序中的 UI 窗口显示、切换与交互逻辑。
  */
-class UIManager : public QObject {
-    Q_OBJECT
-    
+class UIManager {
 public:
-    static UIManager* instance();
-    
-    // UI状态管理
-    void setUIState(const QString& state);
-    QString getCurrentState() const { return m_currentState; }
-    
-    // 角色状态UI
-    void updateCharacterStatus(const QString& characterName, const QVariantMap& stats);
-    void showCharacterStatus(bool show);
-    void setCharacterStatusWidget(QWidget* widget);
-    
-    // 技能栏UI
-    void updateSkillBar(const QList<QVariantMap>& skills);
-    void setSkillBarWidget(QWidget* widget);
-    void showSkillBar(bool show);
-    
-    // 背包UI
-    void updateInventory(const QList<QVariantMap>& items);
-    void setInventoryWidget(QWidget* widget);
-    void showInventory(bool show);
-    
-    // 对话UI
-    void showDialogue(const QString& speaker, const QString& content, const QList<QString>& choices);
-    void hideDialogue();
-    void setDialogueWidget(QWidget* widget);
-    
-    // 战斗UI
-    void showBattleUI(bool show);
-    void updateBattleStatus(const QVariantMap& playerStats, const QList<QVariantMap>& enemyStats);
-    void setBattleWidget(QWidget* widget);
-    
-    // 小地图UI
-    void updateMinimap(const QVariantMap& mapData);
-    void setMinimapWidget(QWidget* widget);
-    void showMinimap(bool show);
-    
-    // 任务UI
-    void updateQuestLog(const QList<QVariantMap>& quests);
-    void setQuestWidget(QWidget* widget);
-    void showQuestLog(bool show);
-    
-    // 设置UI
-    void showSettings(bool show);
-    void setSettingsWidget(QWidget* widget);
-    
-    // 通知系统
-    void showNotification(const QString& message, const QString& type = "info", int duration = 3000);
-    void showTooltip(const QString& text, const QPoint& position);
-    void hideTooltip();
-    
-    // 加载界面
-    void showLoadingScreen(const QString& message = "加载中...");
-    void hideLoadingScreen();
-    void updateLoadingProgress(int progress);
-    
-    // 暂停菜单
-    void showPauseMenu(bool show);
-    void setPauseMenuWidget(QWidget* widget);
-    
-    // 游戏结束界面
-    void showGameOver(bool victory, const QString& message = "");
-    void setGameOverWidget(QWidget* widget);
-    
-    // UI动画
-    void fadeInWidget(QWidget* widget, int duration = 300);
-    void fadeOutWidget(QWidget* widget, int duration = 300);
-    void slideInWidget(QWidget* widget, const QString& direction = "right", int duration = 300);
-    void slideOutWidget(QWidget* widget, const QString& direction = "right", int duration = 300);
-    
-    // 主题和样式
-    void setTheme(const QString& theme);
-    QString getCurrentTheme() const { return m_currentTheme; }
-    void applyStyleSheet(QWidget* widget, const QString& style);
-    
-    // 本地化
-    void setLanguage(const QString& language);
-    QString getCurrentLanguage() const { return m_currentLanguage; }
-    QString translate(const QString& key);
-    
-    // UI控制
-    void update();
-    void showUI(const QString& uiName);
-    void hideUI(const QString& uiName);
-    
-signals:
-    void uiStateChanged(const QString& state);
-    void characterStatusUpdated(const QString& characterName, const QVariantMap& stats);
-    void skillBarUpdated(const QList<QVariantMap>& skills);
-    void inventoryUpdated(const QList<QVariantMap>& items);
-    void dialogueShown(const QString& speaker, const QString& content);
-    void dialogueHidden();
-    void choiceSelected(int choiceIndex);
-    void battleUIUpdated(const QVariantMap& playerStats, const QList<QVariantMap>& enemyStats);
-    void minimapUpdated(const QVariantMap& mapData);
-    void questLogUpdated(const QList<QVariantMap>& quests);
-    void notificationShown(const QString& message, const QString& type);
-    void loadingProgressUpdated(int progress);
-    void themeChanged(const QString& theme);
-    void languageChanged(const QString& language);
-    
-private slots:
-    void updateUI(float deltaTime);
-    void onNotificationTimeout();
-    void onTooltipTimeout();
-    
+    /**
+     * @brief 获取单例实例
+     * @return 单例引用
+     */
+    static UIManager& GetInstance();
+
+    /**
+     * @brief 初始化 UIManager
+     */
+    void Init();
+
+    /**
+     * @brief 打开指定名称的界面
+     * @param windowName 界面名称
+     */
+    void OpenWindow(const std::string& windowName);
+
+    /**
+     * @brief 关闭指定名称的界面
+     * @param windowName 界面名称
+     */
+    void CloseWindow(const std::string& windowName);
+
+    /**
+     * @brief 切换到指定界面（关闭其他所有界面）
+     * @param windowName 界面名称
+     */
+    void SwitchWindow(const std::string& windowName);
+
+    /**
+     * @brief 注册一个新界面
+     * @param windowName 界面名称
+     * @param window 界面对象指针
+     */
+    void RegisterWindow(const std::string& windowName, UIWindow* window);
+
+    /**
+     * @brief 获取当前激活的界面名称
+     * @return 界面名称字符串
+     */
+    std::string GetCurrentWindow() const;
+
+    /**
+     * @brief 更新所有界面状态
+     * @param dt 时间间隔（秒）
+     */
+    void Update(float dt);
+
+    /**
+     * @brief 销毁 UIManager 并释放资源
+     */
+    void Destroy();
+
+    /**
+     * @brief 设置默认界面
+     * @param windowName 界面名称
+     * @todo 实现启动时自动加载默认界面
+     */
+    void SetDefaultWindow(const std::string& windowName);
+
 private:
-    UIManager(QObject* parent = nullptr);
-    ~UIManager();
-    
-    void initializeUI();
-    void setupConnections();
-    void createDefaultWidgets();
-    void applyDefaultStyles();
-    
-    // UI组件
-    QWidget* m_characterStatusWidget;
-    QWidget* m_skillBarWidget;
-    QWidget* m_inventoryWidget;
-    QWidget* m_dialogueWidget;
-    QWidget* m_battleWidget;
-    QWidget* m_minimapWidget;
-    QWidget* m_questWidget;
-    QWidget* m_settingsWidget;
-    QWidget* m_pauseMenuWidget;
-    QWidget* m_gameOverWidget;
-    QWidget* m_loadingWidget;
-    QWidget* m_notificationWidget;
-    QWidget* m_tooltipWidget;
-    
-    // 状态管理
-    QString m_currentState;
-    QString m_currentTheme;
-    QString m_currentLanguage;
-    
-    // 数据缓存
-    QVariantMap m_characterStats;
-    QList<QVariantMap> m_skillList;
-    QList<QVariantMap> m_inventoryItems;
-    QList<QVariantMap> m_questList;
-    QVariantMap m_battleData;
-    QVariantMap m_minimapData;
-    
-    // 定时器
-    QTimer* m_updateTimer;
-    QTimer* m_notificationTimer;
-    QTimer* m_tooltipTimer;
-    
-    // 本地化数据
-    QMap<QString, QString> m_translations;
-    
-    // 动画状态
-    QMap<QWidget*, QTimer*> m_animationTimers;
-    
-    static UIManager* s_instance;
+    UIManager() = default;
+    ~UIManager() = default;
+
+    std::unordered_map<std::string, UIWindow*> windows_;
+    std::string currentWindow_;
+    bool initialized_{false};
+
+    // 禁止拷贝
+    UIManager(const UIManager&) = delete;
+    UIManager& operator=(const UIManager&) = delete;
 };
 
-} // namespace Fantasy
-
-#endif // UIMANAGER_H
+#endif // PURE_UI_MANAGER_H

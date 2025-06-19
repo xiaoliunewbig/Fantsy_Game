@@ -6,574 +6,225 @@
  */
 
 #include "ui/scenes/GameScene.h"
-#include "utils/Logger.h"
-#include <QVBoxLayout>
-#include <QGraphicsPixmapItem>
-#include <QGraphicsTextItem>
-#include <QGraphicsEllipseItem>
-#include <QBrush>
-#include <QPen>
-#include <QColor>
-#include <QApplication>
-#include <QScreen>
-#include <QResizeEvent>
-#include <QWheelEvent>
-#include <QPainter>
-#include <QKeyEvent>
-#include <QMouseEvent>
-#include <QTimer>
+#include <iostream>
+#include <cmath>
 
-GameScene::GameScene(QWidget* parent)
-    : QWidget(parent)
-    , m_graphicsView(new QGraphicsView(this))
-    , m_graphicsScene(new QGraphicsScene(this))
-    , m_isRunning(false)
-    , m_inputEnabled(true)
-    , m_followTarget(nullptr)
-    , m_cameraPosition(0, 0)
-    , m_cameraZoom(1.0f)
-    , m_targetCameraPosition(0, 0)
-    , m_mousePressed(false)
-    , m_updateTimer(new QTimer(this))
-    , m_gameTimer(nullptr) {
-    
-    CLIENT_LOG_DEBUG("Creating GameScene");
-    
+namespace Fantasy {
+
+Vector2 Vector2::screenToWorld(const std::pair<int, int>& screenPos, float cameraX, float cameraY, float zoom) {
+    return Vector2(
+        (static_cast<float>(screenPos.first) - 400.0f) / zoom + cameraX,
+        (static_cast<float>(screenPos.second) - 300.0f) / zoom + cameraY
+    );
+}
+
+std::pair<int, int> Vector2::worldToScreen(const Vector2& worldPos, float cameraX, float cameraY, float zoom) {
+    int x = static_cast<int>((worldPos.x - cameraX) * zoom + 400.0f);
+    int y = static_cast<int>((worldPos.y - cameraY) * zoom + 300.0f);
+    return {x, y};
+}
+
+GameScene::GameScene()
+    : m_isRunning(false),
+      m_inputEnabled(true),
+      m_cameraPosition(0.0f, 0.0f),
+      m_cameraZoom(1.0f),
+      m_followTarget(nullptr),
+      m_updateInterval(1.0f / 60.0f)
+{
     setupUI();
     setupConnections();
-    initializeGraphics();
-    
-    // 设置窗口属性
-    setFocusPolicy(Qt::StrongFocus);
-    setMouseTracking(true);
-    
-    // 创建游戏定时器
-    m_gameTimer = new QTimer(this);
-    m_gameTimer->setInterval(16); // ~60 FPS
-    connect(m_gameTimer, &QTimer::timeout, this, &GameScene::update);
-    
-    CLIENT_LOG_DEBUG("GameScene created successfully");
 }
 
 GameScene::~GameScene() {
-    stopScene();
-    CLIENT_LOG_DEBUG("Destroying GameScene");
+    std::cout << "[GameScene] Destroyed." << std::endl;
 }
 
 void GameScene::setupUI() {
-    auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_graphicsView);
-    
-    // 设置图形视图属性
-    m_graphicsView->setRenderHint(QPainter::Antialiasing);
-    m_graphicsView->setRenderHint(QPainter::SmoothPixmapTransform);
-    m_graphicsView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    m_graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_graphicsView->setDragMode(QGraphicsView::NoDrag);
-    m_graphicsView->setFocusPolicy(Qt::StrongFocus);
-    
-    // 设置场景大小
-    QScreen* screen = QGuiApplication::primaryScreen();
-    QRect screenGeometry = screen->geometry();
-    m_graphicsScene->setSceneRect(0, 0, screenGeometry.width(), screenGeometry.height());
-    
-    m_graphicsView->setScene(m_graphicsScene);
+    initializeGraphics();
 }
 
 void GameScene::setupConnections() {
-    // 连接更新定时器
-    connect(m_updateTimer, &QTimer::timeout, this, [this]() {
-        updateScene(1.0f / 60.0f); // 60 FPS
-    });
-    
-    // 连接游戏引擎信号
-    if (GameEngine::instance()) {
-        connect(GameEngine::instance(), &GameEngine::gameStateChanged,
-                this, [this](GameState state) {
-            if (state == GameState::PLAYING) {
-                resumeScene();
-            } else {
-                pauseScene();
-            }
-        });
-    }
+    // 这里可以绑定回调或事件监听
 }
 
 void GameScene::initializeGraphics() {
-    // 设置默认背景
-    setBackground(":/resources/images/default_background.png");
-    
-    // 添加网格线（调试用）
-    if (Logger::getLogLevel() == LogLevel::DEBUG) {
-        drawGrid();
-    }
+    std::cout << "[GameScene] Graphics initialized." << std::endl;
 }
 
-void GameScene::drawGrid() {
-    QPen gridPen(QColor(100, 100, 100, 50), 1);
-    int gridSize = 50;
-    int sceneWidth = m_graphicsScene->width();
-    int sceneHeight = m_graphicsScene->height();
-    
-    // 绘制垂直线
-    for (int x = 0; x <= sceneWidth; x += gridSize) {
-        m_graphicsScene->addLine(x, 0, x, sceneHeight, gridPen);
-    }
-    
-    // 绘制水平线
-    for (int y = 0; y <= sceneHeight; y += gridSize) {
-        m_graphicsScene->addLine(0, y, sceneWidth, y, gridPen);
-    }
+void GameScene::startGame() {
+    m_isRunning = true;
+    std::cout << "[GameScene] Game started." << std::endl;
+}
+
+void GameScene::pauseGame() {
+    m_isRunning = false;
+    std::cout << "[GameScene] Game paused." << std::endl;
+}
+
+void GameScene::resumeGame() {
+    m_isRunning = true;
+    std::cout << "[GameScene] Game resumed." << std::endl;
+}
+
+void GameScene::stopGame() {
+    m_isRunning = false;
+    std::cout << "[GameScene] Game stopped." << std::endl;
 }
 
 void GameScene::startScene() {
-    CLIENT_LOG_INFO("Starting game scene");
-    if (m_isRunning) {
-        return;
-    }
-    
-    m_isRunning = true;
-    m_updateTimer->start(16); // ~60 FPS
-    setInputEnabled(true);
-    
-    if (m_gameTimer) {
-        m_gameTimer->start();
-    }
-    
-    CLIENT_LOG_INFO("GameScene started");
+    std::cout << "[GameScene] Scene started." << std::endl;
 }
 
 void GameScene::pauseScene() {
-    CLIENT_LOG_INFO("Pausing game scene");
-    if (!m_isRunning) {
-        return;
-    }
-    
-    m_isRunning = false;
-    m_updateTimer->stop();
-    setInputEnabled(false);
-    
-    if (m_gameTimer) {
-        m_gameTimer->stop();
-    }
-    
-    CLIENT_LOG_INFO("GameScene paused");
+    std::cout << "[GameScene] Scene paused." << std::endl;
 }
 
 void GameScene::resumeScene() {
-    CLIENT_LOG_INFO("Resuming game scene");
-    if (m_isRunning) {
-        return;
-    }
-    
-    m_isRunning = true;
-    m_updateTimer->start(16);
-    setInputEnabled(true);
-    
-    if (m_gameTimer) {
-        m_gameTimer->start();
-    }
-    
-    CLIENT_LOG_INFO("GameScene resumed");
+    std::cout << "[GameScene] Scene resumed." << std::endl;
 }
 
 void GameScene::stopScene() {
-    CLIENT_LOG_INFO("Stopping game scene");
-    m_isRunning = false;
-    m_updateTimer->stop();
-    setInputEnabled(false);
-    
-    if (m_gameTimer) {
-        m_gameTimer->stop();
-    }
-    
-    // 清理角色
-    m_characters.clear();
-    m_followTarget = nullptr;
-    
-    // 清理特效
-    clearEffects();
-    
-    CLIENT_LOG_INFO("GameScene stopped");
+    std::cout << "[GameScene] Scene stopped." << std::endl;
 }
 
 void GameScene::addCharacter(Character* character) {
-    if (!character || m_characters.contains(character)) {
-        return;
-    }
-    
-    m_characters.append(character);
-    
-    // 创建角色图形项
-    QGraphicsEllipseItem* characterItem = new QGraphicsEllipseItem(-20, -20, 40, 40);
-    characterItem->setBrush(QBrush(QColor(100, 150, 255)));
-    characterItem->setPen(QPen(QColor(50, 100, 200), 2));
-    characterItem->setData(0, QVariant::fromValue(character));
-    
-    // 添加角色名称标签
-    QGraphicsTextItem* nameItem = new QGraphicsTextItem(character->getName());
-    nameItem->setDefaultTextColor(QColor::White);
-    nameItem->setFont(QFont("Arial", 10));
-    nameItem->setPos(-30, -40);
-    
-    m_graphicsScene->addItem(characterItem);
-    m_graphicsScene->addItem(nameItem);
-    
-    // 连接角色信号
-    connect(character, &Character::positionChanged,
-            this, &GameScene::onCharacterPositionChanged);
-    
-    CLIENT_LOG_INFO(QString("Character added: %1").arg(character->getName()));
+    m_characters.push_back(character);
+    std::cout << "[GameScene] Character added to scene." << std::endl;
 }
 
 void GameScene::removeCharacter(Character* character) {
-    if (!character || !m_characters.contains(character)) {
-        return;
-    }
-    
-    m_characters.removeOne(character);
-    
-    if (m_followTarget == character) {
-        m_followTarget = nullptr;
-    }
-    
-    // 移除角色图形项
-    QList<QGraphicsItem*> items = m_graphicsScene->items();
-    for (QGraphicsItem* item : items) {
-        if (item->data(0).value<Character*>() == character) {
-            m_graphicsScene->removeItem(item);
-            delete item;
-        }
-    }
-    
-    // 断开角色信号连接
-    disconnect(character, &Character::positionChanged,
-              this, &GameScene::onCharacterPositionChanged);
-    
-    CLIENT_LOG_INFO(QString("Character removed: %1").arg(character->getName()));
+    m_characters.erase(std::remove(m_characters.begin(), m_characters.end(), character), m_characters.end());
+    std::cout << "[GameScene] Character removed from scene." << std::endl;
 }
 
-void GameScene::updateCharacterPosition(Character* character, const QVector2D& position) {
-    if (!character) {
-        return;
+void GameScene::updateCharacterPosition(Character* character, const Vector2& position) {
+    for (auto cb : m_characterMovedCallbacks) {
+        cb(character, position);
     }
-    
-    // 更新角色图形项位置
-    QList<QGraphicsItem*> items = m_graphicsScene->items();
-    for (QGraphicsItem* item : items) {
-        if (item->data(0).value<Character*>() == character) {
-            item->setPos(position.x(), position.y());
-            break;
-        }
-    }
-    
-    emit characterMoved(character, position);
+    std::cout << "[GameScene] Character moved to (" << position.x << ", " << position.y << ")." << std::endl;
 }
 
-void GameScene::setBackground(const QString& backgroundPath) {
+void GameScene::setBackground(const std::string& backgroundPath) {
     m_currentBackground = backgroundPath;
-    
-    // 移除现有背景
-    QList<QGraphicsItem*> items = m_graphicsScene->items();
-    for (QGraphicsItem* item : items) {
-        if (item->data(0).toString() == "background") {
-            m_graphicsScene->removeItem(item);
-            delete item;
-        }
-    }
-    
-    // 添加新背景
-    QPixmap backgroundPixmap(backgroundPath);
-    if (!backgroundPixmap.isNull()) {
-        QGraphicsPixmapItem* backgroundItem = new QGraphicsPixmapItem(backgroundPixmap);
-        backgroundItem->setData(0, "background");
-        backgroundItem->setZValue(-1000); // 背景在最底层
-        m_graphicsScene->addItem(backgroundItem);
-    }
+    std::cout << "[GameScene] Background set to: " << backgroundPath << std::endl;
 }
 
-void GameScene::addEffect(const QString& effectType, const QVector2D& position) {
-    QGraphicsItem* effectItem = nullptr;
-    
-    if (effectType == "explosion") {
-        QGraphicsEllipseItem* explosion = new QGraphicsEllipseItem(-30, -30, 60, 60);
-        explosion->setBrush(QBrush(QColor(255, 100, 0, 150)));
-        explosion->setPen(QPen(QColor(255, 200, 0), 3));
-        effectItem = explosion;
-    } else if (effectType == "sparkle") {
-        QGraphicsEllipseItem* sparkle = new QGraphicsEllipseItem(-5, -5, 10, 10);
-        sparkle->setBrush(QBrush(QColor(255, 255, 0)));
-        sparkle->setPen(QPen(QColor(255, 255, 255), 1));
-        effectItem = sparkle;
-    }
-    
-    if (effectItem) {
-        effectItem->setPos(position.x(), position.y());
-        effectItem->setData(0, "effect");
-        effectItem->setData(1, effectType);
-        m_graphicsScene->addItem(effectItem);
-        m_effects.append(effectItem);
-        
-        // 特效自动消失
-        QTimer::singleShot(1000, [this, effectItem]() {
-            if (m_effects.contains(effectItem)) {
-                m_effects.removeOne(effectItem);
-                m_graphicsScene->removeItem(effectItem);
-                delete effectItem;
-            }
-        });
-    }
+void GameScene::addEffect(const std::string& effectType, const Vector2& position) {
+    m_effects.emplace_back(effectType, position);
+    std::cout << "[GameScene] Effect '" << effectType << "' added at (" << position.x << ", " << position.y << ")." << std::endl;
 }
 
 void GameScene::clearEffects() {
-    for (QGraphicsItem* effect : m_effects) {
-        m_graphicsScene->removeItem(effect);
-        delete effect;
-    }
     m_effects.clear();
+    std::cout << "[GameScene] All effects cleared." << std::endl;
 }
 
 void GameScene::setInputEnabled(bool enabled) {
     m_inputEnabled = enabled;
-    m_graphicsView->setFocusPolicy(enabled ? Qt::StrongFocus : Qt::NoFocus);
+    std::cout << "[GameScene] Input " << (enabled ? "enabled" : "disabled") << "." << std::endl;
 }
 
-void GameScene::setCameraPosition(const QVector2D& position) {
+void GameScene::setCameraPosition(const Vector2& position) {
     m_cameraPosition = position;
-    m_targetCameraPosition = position;
-    updateCamera();
+    std::cout << "[GameScene] Camera moved to (" << position.x << ", " << position.y << ")." << std::endl;
 }
 
 void GameScene::setCameraZoom(float zoom) {
-    m_cameraZoom = qBound(0.1f, zoom, 3.0f);
-    updateCamera();
+    m_cameraZoom = std::max(0.1f, zoom);
+    std::cout << "[GameScene] Camera zoom set to " << zoom << "." << std::endl;
 }
 
 void GameScene::followCharacter(Character* character) {
     m_followTarget = character;
+    std::cout << "[GameScene] Following character." << std::endl;
 }
 
-void GameScene::updateScene(float deltaTime) {
-    if (!m_isRunning) {
-        return;
+void GameScene::onCharacterMoved(CharacterMovedCallback cb) {
+    m_characterMovedCallbacks.push_back(cb);
+}
+
+void GameScene::onCharacterSelected(CharacterSelectedCallback cb) {
+    m_characterSelectedCallbacks.push_back(cb);
+}
+
+void GameScene::onSceneClicked(SceneClickedCallback cb) {
+    m_sceneClickedCallbacks.push_back(cb);
+}
+
+void GameScene::onKeyPressed(KeyPressedCallback cb) {
+    m_keyPressedCallbacks.push_back(cb);
+}
+
+void GameScene::onKeyReleased(KeyReleasedCallback cb) {
+    m_keyReleasedCallbacks.push_back(cb);
+}
+
+void GameScene::update(float deltaTime) {
+    if (!m_isRunning) return;
+
+    for (auto cb : m_keyPressedCallbacks) {
+        // 模拟按键按住逻辑
     }
-    
-    // 更新相机
+
     updateCamera();
-    
-    // 更新角色
-    for (Character* character : m_characters) {
-        if (character) {
-            character->update(deltaTime);
-        }
+    for (auto& effect : m_effects) {
+        // 更新特效动画
     }
-    
-    // 处理输入
-    handleInput(deltaTime);
+
+    // 如果有跟随目标，自动调整摄像机
+    if (m_followTarget != nullptr) {
+        //Vector2 pos = m_followTarget->getPosition(); // 假设 Character 有 getPosition()
+        //setCameraPosition(pos);
+    }
+}
+
+void GameScene::render() const {
+    std::cout << "[GameScene] Rendering scene..." << std::endl;
+    std::cout << "  - Background: " << m_currentBackground << std::endl;
+    std::cout << "  - Characters: " << m_characters.size() << std::endl;
+    std::cout << "  - Effects: " << m_effects.size() << std::endl;
+}
+
+void GameScene::simulateKeyPress(int key) {
+    for (auto cb : m_keyPressedCallbacks) {
+        cb(key);
+    }
+    std::cout << "[GameScene] Key pressed: " << key << std::endl;
+}
+
+void GameScene::simulateKeyRelease(int key) {
+    for (auto cb : m_keyReleasedCallbacks) {
+        cb(key);
+    }
+    std::cout << "[GameScene] Key released: " << key << std::endl;
+}
+
+void GameScene::simulateMousePress(int x, int y) {
+    Vector2 worldPos = Vector2::screenToWorld({x, y}, m_cameraPosition.x, m_cameraPosition.y, m_cameraZoom);
+    for (auto cb : m_sceneClickedCallbacks) {
+        cb(worldPos);
+    }
+    std::cout << "[GameScene] Mouse clicked at (" << worldPos.x << ", " << worldPos.y << ")." << std::endl;
+}
+
+void GameScene::simulateMouseMove(int x, int y) {
+    m_mousePosition = Vector2::screenToWorld({x, y}, m_cameraPosition.x, m_cameraPosition.y, m_cameraZoom);
+}
+
+void GameScene::simulateMouseRelease(int x, int y) {
+    m_mousePressed = false;
+}
+
+void GameScene::simulateWheelEvent(int delta) {
+    float zoomFactor = 1.0f + delta * 0.001f;
+    setCameraZoom(m_cameraZoom * zoomFactor);
 }
 
 void GameScene::updateCamera() {
-    if (m_followTarget) {
-        QVector2D targetPos = m_followTarget->getPosition();
-        m_targetCameraPosition = targetPos;
-    }
-    
-    // 平滑相机移动
-    QVector2D diff = m_targetCameraPosition - m_cameraPosition;
-    m_cameraPosition += diff * 0.1f; // 平滑系数
-    
-    // 应用相机变换
-    QTransform transform;
-    transform.translate(m_graphicsView->width() / 2, m_graphicsView->height() / 2);
-    transform.scale(m_cameraZoom, m_cameraZoom);
-    transform.translate(-m_cameraPosition.x(), -m_cameraPosition.y());
-    
-    m_graphicsView->setTransform(transform);
+    // 插值更新相机位置
+    m_cameraPosition.x += (m_targetCameraPosition.x - m_cameraPosition.x) * 0.1f;
+    m_cameraPosition.y += (m_targetCameraPosition.y - m_cameraPosition.y) * 0.1f;
 }
 
-void GameScene::handleInput(float deltaTime) {
-    if (!m_inputEnabled) {
-        return;
-    }
-    
-    // 处理键盘输入
-    QVector2D movement(0, 0);
-    float moveSpeed = 200.0f; // 像素/秒
-    
-    if (m_keyStates.value(Qt::Key_W) || m_keyStates.value(Qt::Key_Up)) {
-        movement.setY(-1);
-    }
-    if (m_keyStates.value(Qt::Key_S) || m_keyStates.value(Qt::Key_Down)) {
-        movement.setY(1);
-    }
-    if (m_keyStates.value(Qt::Key_A) || m_keyStates.value(Qt::Key_Left)) {
-        movement.setX(-1);
-    }
-    if (m_keyStates.value(Qt::Key_D) || m_keyStates.value(Qt::Key_Right)) {
-        movement.setX(1);
-    }
-    
-    // 标准化对角线移动
-    if (movement.length() > 0) {
-        movement.normalize();
-        movement *= moveSpeed * deltaTime;
-        
-        // 移动玩家角色
-        if (!m_characters.isEmpty()) {
-            Character* player = m_characters.first();
-            QVector2D newPos = player->getPosition() + movement;
-            player->move(newPos);
-        }
-    }
-}
-
-void GameScene::onCharacterPositionChanged(Character* character, const QVector2D& position) {
-    updateCharacterPosition(character, position);
-}
-
-QVector2D GameScene::screenToWorld(const QPoint& screenPos) {
-    QPointF scenePos = m_graphicsView->mapToScene(screenPos);
-    return QVector2D(scenePos.x(), scenePos.y());
-}
-
-QPoint GameScene::worldToScreen(const QVector2D& worldPos) {
-    QPointF scenePos(worldPos.x(), worldPos.y());
-    return m_graphicsView->mapFromScene(scenePos);
-}
-
-void GameScene::keyPressEvent(QKeyEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::keyPressEvent(event);
-        return;
-    }
-    
-    m_keyStates[event->key()] = true;
-    emit keyPressed(event->key());
-    
-    switch (event->key()) {
-        case Qt::Key_W:
-        case Qt::Key_Up:
-            CLIENT_LOG_DEBUG("Move up");
-            break;
-        case Qt::Key_S:
-        case Qt::Key_Down:
-            CLIENT_LOG_DEBUG("Move down");
-            break;
-        case Qt::Key_A:
-        case Qt::Key_Left:
-            CLIENT_LOG_DEBUG("Move left");
-            break;
-        case Qt::Key_D:
-        case Qt::Key_Right:
-            CLIENT_LOG_DEBUG("Move right");
-            break;
-        case Qt::Key_Space:
-            CLIENT_LOG_DEBUG("Jump/Attack");
-            break;
-        case Qt::Key_Escape:
-            CLIENT_LOG_DEBUG("Pause game");
-            break;
-        default:
-            break;
-    }
-    
-    QWidget::keyPressEvent(event);
-}
-
-void GameScene::keyReleaseEvent(QKeyEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::keyReleaseEvent(event);
-        return;
-    }
-    
-    m_keyStates[event->key()] = false;
-    emit keyReleased(event->key());
-    
-    QWidget::keyReleaseEvent(event);
-}
-
-void GameScene::mousePressEvent(QMouseEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::mousePressEvent(event);
-        return;
-    }
-    
-    m_mousePressed = true;
-    m_mousePosition = QVector2D(event->pos());
-    
-    QVector2D worldPos = screenToWorld(event->pos());
-    emit sceneClicked(worldPos);
-    
-    CLIENT_LOG_DEBUG("Mouse pressed at (%d, %d)", event->x(), event->y());
-    
-    QWidget::mousePressEvent(event);
-}
-
-void GameScene::mouseReleaseEvent(QMouseEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::mouseReleaseEvent(event);
-        return;
-    }
-    
-    m_mousePressed = false;
-    
-    QWidget::mouseReleaseEvent(event);
-}
-
-void GameScene::mouseMoveEvent(QMouseEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::mouseMoveEvent(event);
-        return;
-    }
-    
-    m_mousePosition = QVector2D(event->pos());
-    
-    QWidget::mouseMoveEvent(event);
-}
-
-void GameScene::wheelEvent(QWheelEvent* event) {
-    if (!m_inputEnabled) {
-        QWidget::wheelEvent(event);
-        return;
-    }
-    
-    // 鼠标滚轮缩放
-    float zoomFactor = event->angleDelta().y() > 0 ? 1.1f : 0.9f;
-    setCameraZoom(m_cameraZoom * zoomFactor);
-    
-    QWidget::wheelEvent(event);
-}
-
-void GameScene::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-    
-    // 更新场景大小
-    m_graphicsScene->setSceneRect(0, 0, width(), height());
-    
-    // 重新绘制网格（调试模式）
-    if (Logger::getLogLevel() == LogLevel::DEBUG) {
-        // 清除现有网格
-        QList<QGraphicsItem*> items = m_graphicsScene->items();
-        for (QGraphicsItem* item : items) {
-            if (item->data(0).toString() == "grid") {
-                m_graphicsScene->removeItem(item);
-                delete item;
-            }
-        }
-        drawGrid();
-    }
-}
-
-void GameScene::update() {
-    if (!m_isRunning) {
-        return;
-    }
-    
-    // 更新游戏逻辑
-    // TODO: 实现游戏逻辑更新
-    
-    // 触发重绘
-    update();
-}
+} // namespace Fantasy

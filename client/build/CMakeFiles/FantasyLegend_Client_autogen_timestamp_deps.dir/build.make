@@ -66,12 +66,14 @@ include CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps.dir/compiler_depe
 # Include the progress variables for this target.
 include CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps.dir/progress.make
 
+CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6Gui.so.6.3.1
 CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/libexec/uic
-CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6QuickControls2.so.6.3.1
 CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6Widgets.so.6.3.1
 CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6Core.so.6.3.1
-CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/libexec/moc
 CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6Quick.so.6.3.1
+CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6Network.so.6.3.1
+CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/libexec/moc
+CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps: /home/pck/tools/qtlib/lib/libQt6QuickControls2.so.6.3.1
 
 FantasyLegend_Client_autogen_timestamp_deps: CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps
 FantasyLegend_Client_autogen_timestamp_deps: CMakeFiles/FantasyLegend_Client_autogen_timestamp_deps.dir/build.make

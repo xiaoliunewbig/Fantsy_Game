@@ -6,49 +6,96 @@
  */
 
 #include "ui/managers/UIManager.h"
-#include "utils/Logger.h"
-#include <QTimer>
+#include <iostream>
 
-namespace Fantasy {
+class UIWindow {
+public:
+    virtual ~UIWindow() = default;
+    virtual void Show() { std::cout << "[UIWindow] Showing window." << std::endl; }
+    virtual void Hide() { std::cout << "[UIWindow] Hiding window." << std::endl; }
+    virtual void Update(float dt) { /* 可以被重写 */ }
+};
 
-UIManager::UIManager(QObject* parent)
-    : QObject(parent)
-    , m_updateTimer(nullptr)
-{
-    CLIENT_LOG_DEBUG("Creating UIManager");
-    
-    // 创建更新定时器
-    m_updateTimer = new QTimer(this);
-    m_updateTimer->setInterval(16); // ~60 FPS
-    connect(m_updateTimer, &QTimer::timeout, this, &UIManager::update);
-    
-    CLIENT_LOG_DEBUG("UIManager created successfully");
+UIManager& UIManager::GetInstance() {
+    static UIManager instance;
+    return instance;
 }
 
-UIManager::~UIManager()
-{
-    CLIENT_LOG_DEBUG("Destroying UIManager");
-    
-    if (m_updateTimer) {
-        m_updateTimer->stop();
+void UIManager::Init() {
+    if (!initialized_) {
+        std::cout << "[UIManager] Initializing..." << std::endl;
+        initialized_ = true;
     }
 }
 
-void UIManager::update()
-{
-    // TODO: 实现UI更新逻辑
+void UIManager::OpenWindow(const std::string& windowName) {
+    auto it = windows_.find(windowName);
+    if (it != windows_.end()) {
+        UIWindow* window = it->second;
+        window->Show();
+        currentWindow_ = windowName;
+        std::cout << "[UIManager] Window '" << windowName << "' opened." << std::endl;
+    } else {
+        std::cerr << "[UIManager] Failed to open window: " << windowName << ". Not registered!" << std::endl;
+    }
 }
 
-void UIManager::showUI(const QString& uiName)
-{
-    CLIENT_LOG_DEBUG("Showing UI: %s", uiName.toUtf8().constData());
-    // TODO: 实现UI显示逻辑
+void UIManager::CloseWindow(const std::string& windowName) {
+    auto it = windows_.find(windowName);
+    if (it != windows_.end()) {
+        UIWindow* window = it->second;
+        window->Hide();
+        if (currentWindow_ == windowName)
+            currentWindow_.clear();
+        std::cout << "[UIManager] Window '" << windowName << "' closed." << std::endl;
+    } else {
+        std::cerr << "[UIManager] Failed to close window: " << windowName << ". Not registered!" << std::endl;
+    }
 }
 
-void UIManager::hideUI(const QString& uiName)
-{
-    CLIENT_LOG_DEBUG("Hiding UI: %s", uiName.toUtf8().constData());
-    // TODO: 实现UI隐藏逻辑
+void UIManager::SwitchWindow(const std::string& windowName) {
+    for (auto& pair : windows_) {
+        if (pair.first == windowName)
+            continue;
+        pair.second->Hide();
+    }
+
+    OpenWindow(windowName);
+    std::cout << "[UIManager] Switched to window: " << windowName << std::endl;
 }
 
-} // namespace Fantasy
+void UIManager::RegisterWindow(const std::string& windowName, UIWindow* window) {
+    if (windows_.find(windowName) == windows_.end()) {
+        windows_[windowName] = window;
+        std::cout << "[UIManager] Window '" << windowName << "' registered." << std::endl;
+    } else {
+        std::cerr << "[UIManager] Window '" << windowName << "' already exists. Skipping registration." << std::endl;
+    }
+}
+
+std::string UIManager::GetCurrentWindow() const {
+    return currentWindow_;
+}
+
+void UIManager::Update(float dt) {
+    for (auto& pair : windows_) {
+        pair.second->Update(dt);
+    }
+}
+
+void UIManager::Destroy() {
+    if (initialized_) {
+        std::cout << "[UIManager] Destroying UIManager..." << std::endl;
+        for (auto& pair : windows_) {
+            delete pair.second;
+        }
+        windows_.clear();
+        currentWindow_.clear();
+        initialized_ = false;
+    }
+}
+
+void UIManager::SetDefaultWindow(const std::string& windowName) {
+    // TODO: 实现启动时自动加载默认界面
+    std::cout << "[UIManager] Default window set to: " << windowName << std::endl;
+}
